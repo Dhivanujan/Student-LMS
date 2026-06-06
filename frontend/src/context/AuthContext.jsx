@@ -1,7 +1,3 @@
-// ============================================
-// AUTHENTICATION CONTEXT - Global user state
-// ============================================
-
 import React, { createContext, useState, useEffect } from "react";
 import api from "../services/api";
 
@@ -20,8 +16,8 @@ export const AuthProvider = ({ children }) => {
 
             if (token && storedUser) {
                 try {
-                    // Call /students/me to verify token validity and fetch fresh student details
-                    const response = await api.get("/students/me");
+                    // Fetch fresh profile details from the unified /auth/me
+                    const response = await api.get("/auth/me");
                     const userData = response.data.data;
                     setUser(userData);
                     localStorage.setItem("user", JSON.stringify(userData));
@@ -33,7 +29,6 @@ export const AuthProvider = ({ children }) => {
                     setUser(null);
                 }
             } else {
-                // Clear any partial/corrupted storage values
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
                 setUser(null);
@@ -47,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     // 2. LOGIN action
     const login = async (email, password) => {
         try {
-            const response = await api.post("/students/login", { email, password });
+            const response = await api.post("/auth/login", { email, password });
             const { token, data } = response.data;
 
             // Store credentials in localStorage
@@ -65,14 +60,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     // 3. REGISTER action
-    const register = async (name, email, password, role = "student") => {
+    const register = async (name, email, password, role = "student", departmentId = "") => {
         try {
-            const response = await api.post("/students/register", {
-                name,
-                email,
-                password,
-                role
-            });
+            const payload = { name, email, password, role };
+            if (departmentId) {
+                payload.departmentId = departmentId;
+            }
+            const response = await api.post("/auth/register", payload);
             const { token, data } = response.data;
 
             // Auto-login after registration
@@ -83,7 +77,6 @@ export const AuthProvider = ({ children }) => {
             return { success: true };
         } catch (error) {
             console.error("Registration Context Error:", error);
-            // Check if backend returned validation error arrays
             const errors = error.response?.data?.errors || [error.response?.data?.message || "Registration failed."];
             throw new Error(errors.join(", "));
         }
@@ -96,8 +89,27 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // 5. UPDATE PROFILE action
+    const updateProfile = async (formData) => {
+        try {
+            const response = await api.put("/auth/profile", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            const userData = response.data.data;
+            setUser(userData);
+            localStorage.setItem("user", JSON.stringify(userData));
+            return { success: true };
+        } catch (error) {
+            console.error("Update Profile Error:", error);
+            const message = error.response?.data?.message || "Failed to update profile.";
+            throw new Error(message);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

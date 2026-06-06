@@ -1,19 +1,38 @@
-// ============================================
-// COURSE CONTROLLER - Handles Course requests
-// ============================================
-
 const Course = require("../models/Course");
-const Student = require("../models/Student");
-const courseService = require("../services/courseService");
+const User = require("../models/User");
+const Enrollment = require("../models/Enrollment");
+const AuditLog = require("../models/AuditLog");
 
-/**
- * GET ALL COURSES
- * Route: GET /api/courses
- * Access: Public (or authenticated users)
- */
+// Helper to log audit actions
+const logAudit = async (action, details, performerId, ip) => {
+    try {
+        await AuditLog.create({ action, details, performerId, ipAddress: ip || "" });
+    } catch (err) {
+        console.error("Audit log failed:", err.message);
+    }
+};
+
+// ============================================
+// GET ALL COURSES (With filters)
+// ============================================
 exports.getCourses = async (req, res) => {
     try {
-        const courses = await Course.find().populate("enrolledStudents", "name email");
+        const { departmentId, semester, search, lecturerId } = req.query;
+        let query = {};
+
+        if (departmentId) query.departmentId = departmentId;
+        if (semester) query.semester = semester;
+        if (lecturerId) query.lecturerId = lecturerId;
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { code: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        const courses = await Course.find(query)
+            .populate("departmentId", "name code")
+            .populate("lecturerId", "name email specialization");
 
         res.status(200).json({
             success: true,
@@ -29,31 +48,70 @@ exports.getCourses = async (req, res) => {
     }
 };
 
-/**
- * CREATE A COURSE
- * Route: POST /api/courses
- * Access: Private (Admin only)
- */
+// ============================================
+// GET SINGLE COURSE DETAILS
+// ============================================
+exports.getCourseById = async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id)
+            .populate("departmentId", "name code")
+            .populate("lecturerId", "name email specialization");
+
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        // Fetch students enrolled (approved status)
+        const enrollments = await Enrollment.find({ courseId: course._id, status: "approved" })
+            .populate("studentId", "name email studentId");
+        
+        const enrolledStudents = enrollments.map(e => e.studentId);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                course,
+                enrolledStudents
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch course details",
+            error: error.message
+        });
+    }
+};
+
+// ============================================
+// CREATE COURSE (Admin only)
+// ============================================
 exports.createCourse = async (req, res) => {
     try {
-        const { title, description, instructor, duration, capacity } = req.body;
+        const { code, name, description, credits, semester, departmentId, lecturerId } = req.body;
 
-        // Check if course already exists
-        const courseExists = await Course.findOne({ title });
-        if (courseExists) {
+        const codeExists = await Course.findOne({ code: code.toUpperCase() });
+        if (codeExists) {
             return res.status(400).json({
                 success: false,
-                message: "Course with this title already exists"
+                message: "Course with this code already exists"
             });
         }
 
         const course = await Course.create({
-            title,
+            code: code.toUpperCase(),
+            name,
             description,
-            instructor,
-            duration,
-            capacity
+            credits,
+            semester,
+            departmentId,
+            lecturerId: lecturerId || null
         });
+
+        await logAudit("COURSE_CREATE", `Created course: ${course.code} - ${course.name}`, req.user._id, req.ip);
 
         res.status(201).json({
             success: true,
@@ -69,13 +127,12 @@ exports.createCourse = async (req, res) => {
     }
 };
 
-/**
- * DELETE A COURSE
- * Route: DELETE /api/courses/:id
- * Access: Private (Admin only)
- */
-exports.deleteCourse = async (req, res) => {
+// ============================================
+// UPDATE COURSE (Admin only)
+// ============================================
+exports.updateCourse = async (req, res) => {
     try {
+        const { code, name, description, credits, semester, departmentId, lecturerId } = req.body;
         const course = await Course.findById(req.params.id);
 
         if (!course) {
@@ -85,18 +142,98 @@ exports.deleteCourse = async (req, res) => {
             });
         }
 
-        // 1. Maintain referential integrity: pull course reference from all students
-        await Student.updateMany(
-            { enrolledCourses: req.params.id },
-            { $pull: { enrolledCourses: req.params.id } }
-        );
+        if (code) course.code = code.toUpperCase();
+        if (name) course.name = name;
+        if (description) course.description = description;
+        if (credits) course.credits = credits;
+        if (semester) course.semester = semester;
+        if (departmentId) course.departmentId = departmentId;
+        if (lecturerId !== undefined) course.lecturerId = lecturerId || null;
 
-        // 2. Delete the course
-        await Course.findByIdAndDelete(req.params.id);
+        await course.save();
+
+        await logAudit("COURSE_UPDATE", `Updated course: ${course.code}`, req.user._id, req.ip);
 
         res.status(200).json({
             success: true,
-            message: "Course deleted successfully"
+            message: "Course updated successfully!",
+            data: course
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update course",
+            error: error.message
+        });
+    }
+};
+
+// ============================================
+// ASSIGN LECTURER TO COURSE (Admin only)
+// ============================================
+exports.assignLecturer = async (req, res) => {
+    try {
+        const { lecturerId } = req.body;
+        const course = await Course.findById(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        if (lecturerId) {
+            const lecturer = await User.findOne({ _id: lecturerId, role: "lecturer" });
+            if (!lecturer) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Selected user is not a valid lecturer"
+                });
+            }
+        }
+
+        course.lecturerId = lecturerId || null;
+        await course.save();
+
+        await logAudit("LECTURER_ASSIGN", `Assigned lecturer to course: ${course.code}`, req.user._id, req.ip);
+
+        res.status(200).json({
+            success: true,
+            message: lecturerId ? "Lecturer assigned successfully!" : "Lecturer unassigned successfully!",
+            data: course
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to assign lecturer",
+            error: error.message
+        });
+    }
+};
+
+// ============================================
+// DELETE COURSE (Admin only)
+// ============================================
+exports.deleteCourse = async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        // Remove enrollments, assignments, quizzes, results (can cascade later or delete course)
+        await Course.findByIdAndDelete(req.params.id);
+        await Enrollment.deleteMany({ courseId: req.params.id });
+
+        await logAudit("COURSE_DELETE", `Deleted course: ${course.code}`, req.user._id, req.ip);
+
+        res.status(200).json({
+            success: true,
+            message: "Course deleted successfully!"
         });
     } catch (error) {
         res.status(500).json({
@@ -107,69 +244,100 @@ exports.deleteCourse = async (req, res) => {
     }
 };
 
-/**
- * ENROLL IN A COURSE
- * Route: POST /api/courses/:id/enroll
- * Access: Private (Student only)
- */
-exports.enrollInCourse = async (req, res) => {
+// ============================================
+// UPLOAD LEARNING MATERIAL (Lecturer only)
+// ============================================
+exports.uploadMaterial = async (req, res) => {
     try {
-        // Enforce role check (only student role can enroll)
-        if (req.user.role !== "student") {
-            return res.status(403).json({
+        const { title, fileType, externalUrl } = req.body;
+        const course = await Course.findById(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({
                 success: false,
-                message: "Only students are allowed to enroll in courses"
+                message: "Course not found"
             });
         }
 
-        const enrollmentResult = await courseService.enrollStudentInCourse(
-            req.user.id,
-            req.params.id
-        );
+        // Authorize: user must be the assigned lecturer or admin
+        if (req.user.role !== "admin" && course.lecturerId?.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to upload materials for this course"
+            });
+        }
 
-        res.status(200).json({
+        let fileUrl = "";
+        if (fileType === "link") {
+            fileUrl = externalUrl;
+        } else {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please upload a material file"
+                });
+            }
+            fileUrl = `/uploads/${req.file.filename}`;
+        }
+
+        const newMaterial = {
+            title,
+            fileType,
+            fileUrl,
+            uploadedAt: Date.now()
+        };
+
+        course.materials.push(newMaterial);
+        await course.save();
+
+        res.status(201).json({
             success: true,
-            message: "Enrolled in course successfully!",
-            data: enrollmentResult
+            message: "Learning material uploaded successfully!",
+            data: course.materials[course.materials.length - 1]
         });
     } catch (error) {
-        res.status(400).json({
+        res.status(500).json({
             success: false,
-            message: "Enrollment failed",
+            message: "Failed to upload material",
             error: error.message
         });
     }
 };
 
-/**
- * UNENROLL FROM A COURSE
- * Route: POST /api/courses/:id/unenroll
- * Access: Private (Student only)
- */
-exports.unenrollFromCourse = async (req, res) => {
+// ============================================
+// DELETE LEARNING MATERIAL (Lecturer only)
+// ============================================
+exports.deleteMaterial = async (req, res) => {
     try {
-        // Enforce role check (only student role can unenroll)
-        if (req.user.role !== "student") {
-            return res.status(403).json({
+        const course = await Course.findById(req.params.id);
+        if (!course) {
+            return res.status(404).json({
                 success: false,
-                message: "Only students are allowed to unenroll from courses"
+                message: "Course not found"
             });
         }
 
-        const enrollmentResult = await courseService.unenrollStudentFromCourse(
-            req.user.id,
-            req.params.id
+        // Authorize: user must be the assigned lecturer or admin
+        if (req.user.role !== "admin" && course.lecturerId?.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to delete materials for this course"
+            });
+        }
+
+        course.materials = course.materials.filter(
+            (mat) => mat._id.toString() !== req.params.materialId
         );
+        await course.save();
 
         res.status(200).json({
             success: true,
-            message: "Unenrolled from course successfully!",
-            data: enrollmentResult
+            message: "Material deleted successfully!"
         });
     } catch (error) {
-        res.status(400).json({
+        res.status(500).json({
             success: false,
-            message: "Unenrollment failed",
+            message: "Failed to delete material",
             error: error.message
         });
     }

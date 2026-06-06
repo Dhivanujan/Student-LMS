@@ -102,6 +102,7 @@ const Register = () => {
                             style={{ background: "rgba(0,0,0,0.4)" }}
                         >
                             <option value="student" style={{ background: "var(--bg-dark)" }}>Student</option>
+                            <option value="lecturer" style={{ background: "var(--bg-dark)" }}>Lecturer</option>
                             <option value="admin" style={{ background: "var(--bg-dark)" }}>Admin</option>
                         </select>
                     </div>

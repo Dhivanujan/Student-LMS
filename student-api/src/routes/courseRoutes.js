@@ -1,42 +1,22 @@
-// ============================================
-// COURSE ROUTES - All course endpoints
-// ============================================
-
 const express = require("express");
 const router = express.Router();
-
-// Import controllers
-const {
-    getCourses,
-    createCourse,
-    deleteCourse,
-    enrollInCourse,
-    unenrollFromCourse
-} = require("../controllers/courseController");
-
-// Import middleware guards
+const { getCourses, getCourseById, createCourse, updateCourse, assignLecturer, deleteCourse, uploadMaterial, deleteMaterial } = require("../controllers/courseController");
 const { protect, authorize } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
-// Import validation middleware
-const { validateCourse } = require("../middleware/validationMiddleware");
+router.route("/")
+    .get(protect, getCourses)
+    .post(protect, authorize("admin"), createCourse);
 
-// ============================================
-// ROUTE DEFINITIONS
-// ============================================
+router.route("/:id")
+    .get(protect, getCourseById)
+    .put(protect, authorize("admin"), updateCourse)
+    .delete(protect, authorize("admin"), deleteCourse);
 
-// Get all courses (Any logged-in user can access)
-router.get("/", protect, getCourses);
+router.put("/:id/assign-lecturer", protect, authorize("admin"), assignLecturer);
 
-// Create a course (Admin only)
-router.post("/", protect, authorize("admin"), validateCourse, createCourse);
-
-// Delete a course (Admin only)
-router.delete("/:id", protect, authorize("admin"), deleteCourse);
-
-// Enroll in a course (Student only)
-router.post("/:id/enroll", protect, authorize("student"), enrollInCourse);
-
-// Unenroll from a course (Student only)
-router.post("/:id/unenroll", protect, authorize("student"), unenrollFromCourse);
+// Materials routes
+router.post("/:id/materials", protect, authorize("lecturer", "admin"), upload.single("materialFile"), uploadMaterial);
+router.delete("/:id/materials/:materialId", protect, authorize("lecturer", "admin"), deleteMaterial);
 
 module.exports = router;

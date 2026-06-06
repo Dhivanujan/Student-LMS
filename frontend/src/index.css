@@ -282,6 +282,11 @@ h1, h2, h3, h4, h5, h6 {
     color: #60a5fa;
 }
 
+.badge-lecturer {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
 .badge-admin {
     background: rgba(245, 158, 11, 0.15);
     color: #fbbf24;
@@ -314,3 +319,240 @@ h1, h2, h3, h4, h5, h6 {
 .link-alt:hover {
     text-decoration: underline;
 }
+
+/* ==========================================================================
+   APP SIDEBAR & LAYOUT
+   ========================================================================== */
+.app-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+}
+
+.sidebar {
+    width: 260px;
+    background: rgba(10, 15, 30, 0.5);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid var(--border-color);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex-shrink: 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.2rem;
+    border-radius: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.main-content {
+    flex: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   ANALYTICS GRID & WIDGETS
+   ========================================================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-card h3 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.stat-card .value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   COURSE DETAIL TABS & CONTROL
+   ========================================================================== */
+.tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: var(--transition-smooth);
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover,
+.tab-btn.active {
+    color: var(--text-main);
+    border-bottom-color: var(--primary);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* ==========================================================================
+   TIMED QUIZ INTERFACE
+   ========================================================================== */
+.quiz-timer-header {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--error);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   NOTIFICATION POPUP DRAWER
+   ========================================================================== */
+.notification-bell-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--error);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 9999px;
+    box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+}
+
+.notification-drawer {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 320px;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-premium);
+    z-index: 200;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    transition: var(--transition-smooth);
+}
+
+.notification-item.unread {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--primary);
+}
+
+.notification-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notification-item .time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+/* ==========================================================================
+   ROSTER & DATA TABLES
+   ========================================================================== */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+}
+
+.premium-table th {
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-muted);
+    text-align: left;
+    padding: 1rem 1.2rem;
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.premium-table td {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.premium-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Discussion Roster */
+.forum-thread-card {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+}
+
+.forum-thread-card:last-child {
+    border-bottom: none;
+}
+
+.forum-comment-card {
+    border-left: 2px solid var(--border-glow);
+    padding-left: 1.2rem;
+    margin: 1rem 0;
+}
+

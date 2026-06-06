@@ -3,7 +3,7 @@
 // ============================================
 
 const jwt = require("jsonwebtoken");
-const Student = require("../models/Student");
+const User = require("../models/User");
 
 /**
  * PROTECT MIDDLEWARE
@@ -24,8 +24,8 @@ exports.protect = async (req, res, next) => {
             // 2. Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // 3. Attach student to req.user (excluding password)
-            req.user = await Student.findById(decoded.id);
+            // 3. Attach user to req.user (excluding password)
+            req.user = await User.findById(decoded.id);
             
             if (!req.user) {
                 return res.status(401).json({
@@ -54,7 +54,7 @@ exports.protect = async (req, res, next) => {
 
 /**
  * AUTHORIZE ROLES MIDDLEWARE
- * Restricts access to specific roles (e.g., 'admin')
+ * Restricts access to specific roles (e.g., 'admin', 'lecturer')
  */
 exports.authorize = (...roles) => {
     return (req, res, next) => {
@@ -75,3 +75,4 @@ exports.authorize = (...roles) => {
         next();
     };
 };
+

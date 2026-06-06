@@ -28,14 +28,37 @@ app.use(express.json());
 // ROUTES LAYER - Define API endpoints
 // ============================================
 
+const path = require("path");
+
 // Import route files
-const studentRoutes = require("./src/routes/studentRoutes");
+const authRoutes = require("./src/routes/authRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 const courseRoutes = require("./src/routes/courseRoutes");
+const enrollmentRoutes = require("./src/routes/enrollmentRoutes");
+const assignmentRoutes = require("./src/routes/assignmentRoutes");
+const quizRoutes = require("./src/routes/quizRoutes");
+const attendanceRoutes = require("./src/routes/attendanceRoutes");
+const announcementRoutes = require("./src/routes/announcementRoutes");
+const forumRoutes = require("./src/routes/forumRoutes");
+const notificationRoutes = require("./src/routes/notificationRoutes");
+const reportRoutes = require("./src/routes/reportRoutes");
 const errorHandler = require("./src/middleware/errorMiddleware");
 
 // Mount routes at specific paths
-app.use("/api/students", studentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/forums", forumRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
+
+// Static uploads serving
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Health check endpoint (for testing if server is running)
 app.get("/api/health", (req, res) => {

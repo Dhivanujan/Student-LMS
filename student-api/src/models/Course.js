@@ -1,43 +1,62 @@
-// ============================================
-// COURSE MODEL - Database Schema Definition
-// ============================================
-
 const mongoose = require("mongoose");
 
-/**
- * COURSE SCHEMA
- * Defines the structure of a course document in MongoDB
- */
-const courseSchema = new mongoose.Schema({
+const materialSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, "Please add a course title"],
+        required: true
+    },
+    fileUrl: {
+        type: String,
+        required: true
+    },
+    fileType: {
+        type: String,
+        enum: ["pdf", "word", "powerpoint", "video", "link"],
+        required: true
+    },
+    uploadedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const courseSchema = new mongoose.Schema({
+    code: {
+        type: String,
+        required: [true, "Please add a course code"],
         unique: true,
+        trim: true,
+        uppercase: true
+    },
+    name: {
+        type: String,
+        required: [true, "Please add a course name"],
         trim: true
     },
     description: {
         type: String,
-        required: [true, "Please add a description"]
+        required: [true, "Please add a course description"]
     },
-    instructor: {
-        type: String,
-        required: [true, "Please add an instructor name"]
-    },
-    duration: {
-        type: String,
-        required: [true, "Please add the course duration (e.g., '8 weeks')"]
-    },
-    capacity: {
+    credits: {
         type: Number,
-        required: [true, "Please add the course student capacity"],
-        default: 30
+        required: [true, "Please add a credit value"],
+        default: 3
     },
-    enrolledStudents: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Student"
-        }
-    ],
+    semester: {
+        type: String,
+        required: [true, "Please add the semester (e.g. 'Fall 2026')"]
+    },
+    departmentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Department",
+        required: [true, "Course must belong to a department"]
+    },
+    lecturerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null // Can be unassigned initially
+    },
+    materials: [materialSchema],
     createdAt: {
         type: Date,
         default: Date.now
