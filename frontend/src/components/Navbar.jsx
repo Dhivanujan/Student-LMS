@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
@@ -77,36 +77,77 @@ const Navbar = () => {
         }
     };
 
+    const toggleMobileMenu = () => {
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar) {
+            sidebar.classList.toggle("sidebar-open");
+            // Manage backdrop
+            let backdrop = document.querySelector(".sidebar-backdrop");
+            if (sidebar.classList.contains("sidebar-open")) {
+                if (!backdrop) {
+                    backdrop = document.createElement("div");
+                    backdrop.className = "sidebar-backdrop";
+                    backdrop.addEventListener("click", () => {
+                        sidebar.classList.remove("sidebar-open");
+                        backdrop.remove();
+                    });
+                    document.body.appendChild(backdrop);
+                }
+            } else {
+                if (backdrop) backdrop.remove();
+            }
+        }
+    };
+
     return (
-        <nav className="navbar" style={{ height: "70px", display: "flex", alignItems: "center" }}>
+        <nav className="navbar">
             <div className="container nav-container">
+                {user && (
+                    <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle Menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                )}
+
                 <NavLink to="/dashboard" className="logo">
-                    🎓 UniLMS
+                    EduNex<span className="logo-dot">.</span>
                 </NavLink>
 
                 {user && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "1.8rem" }}>
+                    <div className="nav-right">
                         
                         {/* Notification Bell */}
-                        <div className="notification-bell-container" ref={drawerRef} onClick={() => setShowDrawer(!showDrawer)}>
-                            <span style={{ fontSize: "1.4rem" }}>🔔</span>
-                            {unreadCount > 0 && (
-                                <span className="notification-badge">{unreadCount}</span>
-                            )}
+                        <div className="notification-bell-container" ref={drawerRef}>
+                            <button 
+                                className={`notification-bell ${unreadCount > 0 ? "has-unread" : ""}`}
+                                onClick={() => setShowDrawer(!showDrawer)}
+                                aria-label="Notifications"
+                            >
+                                <svg className="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                                {unreadCount > 0 && (
+                                    <span className="notification-badge">{unreadCount}</span>
+                                )}
+                            </button>
 
                             {showDrawer && (
-                                <div className="notification-drawer" onClick={(e) => e.stopPropagation()}>
-                                    <div style={{ padding: "0.8rem 1rem", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <h4 style={{ margin: 0 }}>Notifications</h4>
+                                <div className="notification-drawer">
+                                    <div className="notification-drawer-header">
+                                        <h4>Notifications</h4>
                                         {unreadCount > 0 && (
-                                            <button onClick={handleMarkAllRead} className="link-alt" style={{ border: "none", background: "none", fontSize: "0.75rem", cursor: "pointer" }}>
+                                            <button onClick={handleMarkAllRead} className="link-alt">
                                                 Mark all read
                                             </button>
                                         )}
                                     </div>
-                                    <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                                    <div className="notification-drawer-body">
                                         {notifications.length === 0 ? (
-                                            <p style={{ padding: "1.5rem", textAlign: "center", color: "var(--text-muted)", margin: 0 }}>
+                                            <p className="empty-state-text" style={{ padding: "2rem", textAlign: "center", margin: 0 }}>
                                                 No notifications
                                             </p>
                                         ) : (
@@ -116,9 +157,11 @@ const Navbar = () => {
                                                     className={`notification-item ${!n.read ? "unread" : ""}`}
                                                     onClick={() => !n.read && handleMarkRead(n._id)}
                                                 >
-                                                    <div style={{ fontWeight: !n.read ? "600" : "400" }}>{n.title}</div>
-                                                    <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.2rem" }}>{n.message}</div>
-                                                    <div className="time">{new Date(n.createdAt).toLocaleTimeString()}</div>
+                                                    <div className="notification-item-content">
+                                                        <div className="notification-item-title">{n.title}</div>
+                                                        <div className="notification-item-message">{n.message}</div>
+                                                        <div className="time">{new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                                    </div>
                                                 </div>
                                             ))
                                         )}
@@ -128,28 +171,31 @@ const Navbar = () => {
                         </div>
 
                         {/* Profile Summary & Logout */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                        <div className="nav-user">
                             {user.profilePicture ? (
                                 <img 
                                     src={`http://localhost:5000${user.profilePicture}`} 
                                     alt={user.name} 
-                                    style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "cover", border: "1.5px solid var(--primary)" }}
+                                    className="nav-user-avatar"
+                                    style={{ objectFit: "cover" }}
                                 />
                             ) : (
-                                <div style={{ width: "35px", height: "35px", borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: "600" }}>
+                                <div className="nav-user-avatar">
                                     {user.name.charAt(0).toUpperCase()}
                                 </div>
                             )}
 
-                            <span style={{ fontSize: "0.9rem", color: "var(--text-muted)", display: "flex", flexDirection: "column" }}>
-                                <span style={{ color: "var(--text-main)", fontWeight: "600" }}>{user.name}</span>
-                                <span style={{ fontSize: "0.75rem" }} className={`badge badge-${user.role}`}>
-                                    {user.role}
-                                </span>
+                            <span className="nav-user-info">
+                                <span className="nav-user-name">{user.name}</span>
+                                <span className="nav-user-role">{user.role}</span>
                             </span>
                             
-                            <button onClick={handleLogout} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
-                                Logout
+                            <button onClick={handleLogout} className="nav-logout-btn" title="Logout">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
                             </button>
                         </div>
                     </div>

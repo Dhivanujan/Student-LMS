@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useContext, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
@@ -13,7 +13,7 @@ const CourseDetails = () => {
     const [activeTab, setActiveTab] = useState("materials");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [successMsg, setSuccessMsg] = useState(null);
+    const [successMsg] = useState(null);
 
     // Tab specific states
     const [materials, setMaterials] = useState([]);
@@ -24,7 +24,7 @@ const CourseDetails = () => {
     const [forumThreads, setForumThreads] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
 
-    const fetchCourseDetails = async () => {
+    const fetchCourseDetails = useCallback(async () => {
         try {
             const res = await api.get(`/courses/${id}`);
             setCourse(res.data.data.course);
@@ -36,9 +36,9 @@ const CourseDetails = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
-    const fetchTabData = async () => {
+    const fetchTabData = useCallback(async () => {
         if (!course) return;
         try {
             if (activeTab === "assignments") {
@@ -65,49 +65,153 @@ const CourseDetails = () => {
         } catch (err) {
             console.error("Failed to load tab data:", err);
         }
-    };
+    }, [course, activeTab, id, user]);
 
     useEffect(() => {
-        fetchCourseDetails();
-    }, [id]);
+        const timer = setTimeout(() => {
+            fetchCourseDetails();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchCourseDetails]);
 
     useEffect(() => {
-        fetchTabData();
-    }, [course, activeTab]);
+        const timer = setTimeout(() => {
+            fetchTabData();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchTabData]);
 
-    if (loading) return <div className="text-center">Loading course workspace...</div>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
-    if (!course) return <div className="alert alert-danger">Course not found.</div>;
+    if (loading) {
+        return (
+            <div className="loading-spinner" style={{ minHeight: "60vh" }}>
+                <div className="spinner"></div>
+                <p className="loading-text">Loading course workspace...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container" style={{ padding: "3rem 0", maxWidth: "600px" }}>
+                <div className="glass-card-static">
+                    <div className="alert alert-danger" style={{ marginBottom: "1.5rem" }}>{error}</div>
+                    <button onClick={() => navigate("/courses")} className="btn btn-outline" style={{ width: "100%" }}>
+                        Back to Courses
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!course) {
+        return (
+            <div className="container" style={{ padding: "3rem 0", maxWidth: "600px" }}>
+                <div className="glass-card-static">
+                    <div className="alert alert-danger" style={{ marginBottom: "1.5rem" }}>Course not found.</div>
+                    <button onClick={() => navigate("/courses")} className="btn btn-outline" style={{ width: "100%" }}>
+                        Back to Courses
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div>
+        <div className="animate-fade-in">
             {/* Header Banner */}
-            <div className="glass-card" style={{ marginBottom: "2rem" }}>
-                <span className="badge badge-student" style={{ marginBottom: "0.5rem" }}>{course.code}</span>
-                <h1 className="page-title">{course.name}</h1>
-                <p style={{ color: "var(--text-muted)", marginBottom: "1rem" }}>{course.description}</p>
-                <div style={{ display: "flex", gap: "2rem", fontSize: "0.9rem", color: "var(--text-muted)", flexWrap: "wrap" }}>
-                    <span>🏫 <strong>Department:</strong> {course.departmentId?.name}</span>
-                    <span>👨‍🏫 <strong>Lecturer:</strong> {course.lecturerId?.name || "Not Assigned"}</span>
-                    <span>🌟 <strong>Credits:</strong> {course.credits} Credits</span>
-                    <span>📅 <strong>Semester:</strong> {course.semester}</span>
+            <div className="course-header-banner animate-slide-up stagger-1">
+                <div className="course-header-content">
+                    <span className="course-card-code">{course.code}</span>
+                    <h1 style={{ marginTop: "0.75rem", marginBottom: "0.5rem" }}>{course.name}</h1>
+                    <p className="course-card-desc" style={{ color: "rgba(255,255,255,0.7)", margin: "0 0 1.5rem 0", fontSize: "0.95rem", lineHeight: "1.5" }}>{course.description}</p>
+                    <div className="course-meta-row" style={{ display: "flex", gap: "1.5rem 2.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", flexWrap: "wrap" }}>
+                        <div className="course-meta-item" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "15px", height: "15px" }}>
+                                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                                <line x1="9" y1="22" x2="9" y2="16"/>
+                                <line x1="15" y1="22" x2="15" y2="16"/>
+                            </svg>
+                            <span><strong>Department:</strong> {course.departmentId?.name}</span>
+                        </div>
+                        <div className="course-meta-item" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "15px", height: "15px" }}>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span><strong>Lecturer:</strong> {course.lecturerId?.name || "Not Assigned"}</span>
+                        </div>
+                        <div className="course-meta-item" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "15px", height: "15px" }}>
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <span><strong>Credits:</strong> {course.credits} Credits</span>
+                        </div>
+                        <div className="course-meta-item" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "15px", height: "15px" }}>
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span><strong>Semester:</strong> {course.semester}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {successMsg && <div className="alert alert-success">{successMsg}</div>}
+            {successMsg && <div className="alert alert-success animate-fade-in">{successMsg}</div>}
 
             {/* Navigation Tabs */}
-            <div className="tabs-header">
-                <button className={`tab-btn ${activeTab === "materials" ? "active" : ""}`} onClick={() => setActiveTab("materials")}>📚 Materials</button>
-                <button className={`tab-btn ${activeTab === "assignments" ? "active" : ""}`} onClick={() => setActiveTab("assignments")}>📝 Assignments</button>
-                <button className={`tab-btn ${activeTab === "quizzes" ? "active" : ""}`} onClick={() => setActiveTab("quizzes")}>⏳ Quizzes</button>
-                <button className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`} onClick={() => setActiveTab("attendance")}>📅 Attendance</button>
-                <button className={`tab-btn ${activeTab === "forum" ? "active" : ""}`} onClick={() => setActiveTab("forum")}>💬 Forum</button>
-                <button className={`tab-btn ${activeTab === "announcements" ? "active" : ""}`} onClick={() => setActiveTab("announcements")}>📢 Announcements</button>
+            <div className="tabs-header animate-slide-up stagger-2" style={{ overflowX: "auto" }}>
+                <button className={`tab-btn ${activeTab === "materials" ? "active" : ""}`} onClick={() => setActiveTab("materials")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                    </svg>
+                    <span>Materials</span>
+                </button>
+                <button className={`tab-btn ${activeTab === "assignments" ? "active" : ""}`} onClick={() => setActiveTab("assignments")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    </svg>
+                    <span>Assignments</span>
+                </button>
+                <button className={`tab-btn ${activeTab === "quizzes" ? "active" : ""}`} onClick={() => setActiveTab("quizzes")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>Quizzes</span>
+                </button>
+                <button className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`} onClick={() => setActiveTab("attendance")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>Attendance</span>
+                </button>
+                <button className={`tab-btn ${activeTab === "forum" ? "active" : ""}`} onClick={() => setActiveTab("forum")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Forum</span>
+                </button>
+                <button className={`tab-btn ${activeTab === "announcements" ? "active" : ""}`} onClick={() => setActiveTab("announcements")}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span>Announcements</span>
+                </button>
             </div>
 
             {/* Tab contents */}
-            <div className="tab-pane">
+            <div className="tab-pane animate-slide-up stagger-3" style={{ padding: "1.5rem 0" }}>
                 {activeTab === "materials" && (
                     <MaterialsTab 
                         materials={materials} 
@@ -121,7 +225,6 @@ const CourseDetails = () => {
                         assignments={assignments} 
                         courseId={id} 
                         user={user} 
-                        enrolledStudents={enrolledStudents}
                         onUpdate={fetchTabData} 
                     />
                 )}
@@ -219,26 +322,60 @@ const MaterialsTab = ({ materials, courseId, user, onUpdate }) => {
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.2fr 1fr" : "1fr", gap: "2rem" }}>
-            <div className="glass-card">
+        <div className="form-row" style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.4fr 1fr" : "1fr", gap: "2rem" }}>
+            <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <h3>Learning Materials</h3>
-                <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
+                <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem", fontSize: "0.85rem", lineHeight: "1.4" }}>
                     Access learning guides, lecture PPTs, PDF manuals, links, and syllabus files.
                 </p>
 
                 {materials.length === 0 ? (
-                    <p style={{ color: "var(--text-muted)" }}>No study materials uploaded yet.</p>
+                    <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                        <div className="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                            </svg>
+                        </div>
+                        <div className="empty-state-title">No materials found</div>
+                        <div className="empty-state-text">No study materials have been uploaded to this section yet.</div>
+                    </div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
                         {materials.map(mat => (
-                            <div key={mat._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
+                            <div key={mat._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                                    <span style={{ fontSize: "1.5rem" }}>
-                                        {mat.fileType === "pdf" ? "📕" : mat.fileType === "word" ? "📘" : mat.fileType === "powerpoint" ? "📙" : mat.fileType === "video" ? "🎥" : "🔗"}
-                                    </span>
+                                    <div style={{ fontSize: "1.5rem", color: "var(--primary-400)" }}>
+                                        {mat.fileType === "pdf" ? (
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "28px", height: "28px" }}>
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                            </svg>
+                                        ) : mat.fileType === "word" ? (
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "28px", height: "28px" }}>
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                                            </svg>
+                                        ) : mat.fileType === "powerpoint" ? (
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "28px", height: "28px" }}>
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                                <line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+                                            </svg>
+                                        ) : mat.fileType === "video" ? (
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "28px", height: "28px" }}>
+                                                <polygon points="23 7 16 12 23 17 23 7"/>
+                                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                            </svg>
+                                        ) : (
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "28px", height: "28px" }}>
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                            </svg>
+                                        )}
+                                    </div>
                                     <div>
-                                        <div style={{ fontWeight: "600" }}>{mat.title}</div>
-                                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                        <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{mat.title}</div>
+                                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>
                                             Type: {mat.fileType.toUpperCase()} • Uploaded: {new Date(mat.uploadedAt).toLocaleDateString()}
                                         </div>
                                     </div>
@@ -248,14 +385,27 @@ const MaterialsTab = ({ materials, courseId, user, onUpdate }) => {
                                         href={mat.fileType === "link" ? mat.fileUrl : `http://localhost:5000${mat.fileUrl}`} 
                                         target="_blank" 
                                         rel="noopener noreferrer" 
-                                        className="btn btn-outline" 
-                                        style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}
+                                        className="btn btn-outline btn-sm"
+                                        style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", textDecoration: "none" }}
                                     >
-                                        View / Open
+                                        <span>Open</span>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                            <polyline points="15 3 21 3 21 9"/>
+                                            <line x1="10" y1="14" x2="21" y2="3"/>
+                                        </svg>
                                     </a>
                                     {user.role !== "student" && (
-                                        <button onClick={() => handleDelete(mat._id)} className="btn btn-danger" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
-                                            Delete
+                                        <button 
+                                            onClick={() => handleDelete(mat._id)} 
+                                            className="btn-icon"
+                                            title="Delete Material"
+                                            style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                        >
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "14px", height: "14px" }}>
+                                                <polyline points="3 6 5 6 21 6"/>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                            </svg>
                                         </button>
                                     )}
                                 </div>
@@ -266,18 +416,18 @@ const MaterialsTab = ({ materials, courseId, user, onUpdate }) => {
             </div>
 
             {user.role !== "student" && (
-                <div className="glass-card">
+                <div className="glass-card-static" style={{ height: "fit-content" }}>
                     <h3>Upload New Material</h3>
-                    {error && <div className="alert alert-danger">{error}</div>}
+                    {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
 
-                    <form onSubmit={handleUpload}>
+                    <form onSubmit={handleUpload} style={{ marginTop: "1.25rem" }}>
                         <div className="form-group">
                             <label>Title</label>
-                            <input type="text" className="form-input" placeholder="e.g. Lecture 1 Notes" value={title} onChange={e => setTitle(e.target.value)} />
+                            <input type="text" className="form-input" placeholder="e.g. Lecture 1 Notes" value={title} onChange={e => setTitle(e.target.value)} required />
                         </div>
                         <div className="form-group">
                             <label>Material Type</label>
-                            <select className="form-input" value={fileType} onChange={e => setFileType(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                            <select className="form-input" value={fileType} onChange={e => setFileType(e.target.value)} style={{ background: "var(--background-dark)" }}>
                                 <option value="pdf">PDF Document</option>
                                 <option value="word">Word Document</option>
                                 <option value="powerpoint">PowerPoint Presentation</option>
@@ -287,19 +437,24 @@ const MaterialsTab = ({ materials, courseId, user, onUpdate }) => {
                         </div>
 
                         {fileType === "link" ? (
-                            <div className="form-group">
+                            <div className="form-group animate-slide-down">
                                 <label>External URL</label>
-                                <input type="url" className="form-input" placeholder="https://example.com" value={externalUrl} onChange={e => setExternalUrl(e.target.value)} />
+                                <input type="url" className="form-input" placeholder="https://example.com" value={externalUrl} onChange={e => setExternalUrl(e.target.value)} required />
                             </div>
                         ) : (
-                            <div className="form-group">
+                            <div className="form-group animate-slide-down">
                                 <label>Select File</label>
-                                <input type="file" onChange={e => setFile(e.target.files[0])} style={{ color: "var(--text-muted)" }} />
+                                <input type="file" onChange={e => setFile(e.target.files[0])} style={{ color: "var(--text-muted)", marginTop: "0.25rem" }} required />
                             </div>
                         )}
 
-                        <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: "100%", marginTop: "1rem" }}>
-                            {uploading ? "Uploading..." : "Upload Material"}
+                        <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>
+                            {uploading ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                    <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                    <span>Uploading...</span>
+                                </div>
+                            ) : "Upload Material"}
                         </button>
                     </form>
                 </div>
@@ -311,7 +466,7 @@ const MaterialsTab = ({ materials, courseId, user, onUpdate }) => {
 // ==========================================================================
 // 2. ASSIGNMENTS TAB COMPONENT
 // ==========================================================================
-const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdate }) => {
+const AssignmentsTab = ({ assignments, courseId, user, onUpdate }) => {
     const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [submissions, setSubmissions] = useState([]);
     const [mySubmission, setMySubmission] = useState(null);
@@ -416,26 +571,55 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
             loadAssignmentDetails(selectedAssignment._id);
         } catch (err) {
             alert(err.response?.data?.message || "Grading failed");
+        } finally {
+            setGradingSubId(null);
         }
+    };
+
+    // Calculate urgency for deadlines
+    const isOverdue = (dueDateStr) => {
+        return new Date(dueDateStr) < new Date();
     };
 
     return (
         <div>
             {selectedAssignment ? (
                 // DETAIL WORKSPACE FOR SELECTED ASSIGNMENT
-                <div className="glass-card">
-                    <button onClick={() => setSelectedAssignment(null)} className="btn btn-outline" style={{ marginBottom: "1.5rem" }}>
-                        ⬅ Back to Assignments List
+                <div className="glass-card-static animate-scale-in">
+                    <button 
+                        onClick={() => setSelectedAssignment(null)} 
+                        className="btn btn-outline btn-sm" 
+                        style={{ marginBottom: "1.5rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        <span>Back to Assignments List</span>
                     </button>
 
-                    <h2>{selectedAssignment.title}</h2>
-                    <p style={{ margin: "1rem 0" }}>{selectedAssignment.description}</p>
-                    <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "2rem" }}>
-                        <span>📅 Due Date: {new Date(selectedAssignment.dueDate).toLocaleString()}</span>
-                        <span>⭐ Max Marks: {selectedAssignment.maxMarks}</span>
+                    <h2 style={{ marginBottom: "0.5rem" }}>{selectedAssignment.title}</h2>
+                    <p style={{ margin: "1rem 0", lineHeight: "1.5", color: "var(--text-main)" }}>{selectedAssignment.description}</p>
+                    
+                    <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "2rem", flexWrap: "wrap", alignItems: "center" }}>
+                        <span className={`badge ${isOverdue(selectedAssignment.dueDate) ? "badge-danger" : "badge-student"}`} style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: "600" }}>
+                            Due Date: {new Date(selectedAssignment.dueDate).toLocaleString()}
+                        </span>
+                        <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: "600", color: "var(--text-main)" }}>
+                            Max Marks: {selectedAssignment.maxMarks}
+                        </span>
                         {selectedAssignment.fileUrl && (
-                            <a href={`http://localhost:5000${selectedAssignment.fileUrl}`} target="_blank" rel="noopener noreferrer" className="link-alt">
-                                Download Guidelines File
+                            <a 
+                                href={`http://localhost:5000${selectedAssignment.fileUrl}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="link-alt"
+                                style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontWeight: "600" }}
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "14px", height: "14px" }}>
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                </svg>
+                                <span>Download Guidelines</span>
                             </a>
                         )}
                     </div>
@@ -445,39 +629,48 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                         <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
                             <h3>My Submission State</h3>
                             {mySubmission ? (
-                                <div style={{ background: "rgba(255,255,255,0.02)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border-color)", marginTop: "1rem" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                                        <span>Status: <strong style={{ color: mySubmission.status === "graded" ? "var(--success)" : "var(--primary)" }}>{mySubmission.status.toUpperCase()}</strong></span>
-                                        <span>Submitted on: {new Date(mySubmission.submittedAt).toLocaleString()}</span>
+                                <div className="glass-card-inner" style={{ padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border-color)", marginTop: "1rem" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                                        <span>Status: <strong className={`badge badge-${mySubmission.status === "graded" ? "success" : "student"}`} style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem", fontWeight: "700", marginLeft: "0.5rem" }}>{mySubmission.status.toUpperCase()}</strong></span>
+                                        <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Submitted: {new Date(mySubmission.submittedAt).toLocaleString()}</span>
                                     </div>
-                                    <div style={{ marginBottom: "1rem" }}>
-                                        <strong>Submission File:</strong>{" "}
-                                        <a href={`http://localhost:5000${mySubmission.fileUrl}`} target="_blank" rel="noopener noreferrer" className="link-alt">
-                                            View Submitted Work
+                                    <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <strong>Submission Attachment:</strong>{" "}
+                                        <a href={`http://localhost:5000${mySubmission.fileUrl}`} target="_blank" rel="noopener noreferrer" className="link-alt" style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "14px", height: "14px" }}>
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                            </svg>
+                                            <span>View Submitted Document</span>
                                         </a>
                                     </div>
-                                    {mySubmission.comments && <p><strong>My Comments:</strong> {mySubmission.comments}</p>}
+                                    {mySubmission.comments && <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}><strong>My Comments:</strong> {mySubmission.comments}</p>}
 
                                     {mySubmission.status === "graded" && (
-                                        <div style={{ marginTop: "1.5rem", borderTop: "1px dashed var(--border-color)", paddingTop: "1rem", background: "rgba(16, 185, 129, 0.05)", padding: "1rem", borderRadius: "8px" }}>
+                                        <div className="glass-card-inner" style={{ marginTop: "1.5rem", borderLeft: "3px solid var(--success)", padding: "1rem", borderRadius: "8px", background: "rgba(16, 185, 129, 0.04)" }}>
                                             <h4 style={{ color: "var(--success)", marginBottom: "0.5rem" }}>Lecturer Evaluation Result</h4>
-                                            <div><strong>Score:</strong> {mySubmission.grade} / {selectedAssignment.maxMarks}</div>
-                                            {mySubmission.feedback && <div><strong>Feedback:</strong> {mySubmission.feedback}</div>}
+                                            <div style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}><strong>Score:</strong> <span style={{ color: "var(--success)", fontWeight: "700" }}>{mySubmission.grade}</span> / {selectedAssignment.maxMarks}</div>
+                                            {mySubmission.feedback && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.5rem", borderTop: "1px dashed rgba(255,255,255,0.06)", paddingTop: "0.5rem" }}><strong>Feedback:</strong> {mySubmission.feedback}</div>}
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 <form onSubmit={handleStudentSubmit} style={{ maxWidth: "500px", marginTop: "1rem" }}>
                                     <div className="form-group">
-                                        <label>Select Submission File (PDF, DOCX, etc.)</label>
-                                        <input type="file" onChange={e => setSubmitFile(e.target.files[0])} required />
+                                        <label>Select Submission File (PDF, DOCX, ZIP etc.)</label>
+                                        <input type="file" onChange={e => setSubmitFile(e.target.files[0])} style={{ color: "var(--text-muted)", marginTop: "0.25rem" }} required />
                                     </div>
                                     <div className="form-group">
                                         <label>Comments / Text Answer (Optional)</label>
                                         <textarea className="form-input" rows="3" placeholder="Write any notes to your lecturer..." value={submitComments} onChange={e => setSubmitComments(e.target.value)}></textarea>
                                     </div>
-                                    <button type="submit" className="btn btn-primary" disabled={uploadingSubmit}>
-                                        {uploadingSubmit ? "Uploading..." : "Submit Assignment"}
+                                    <button type="submit" className="btn btn-primary" disabled={uploadingSubmit} style={{ width: "100%", justifyContent: "center" }}>
+                                        {uploadingSubmit ? (
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                                <span>Uploading submission...</span>
+                                            </div>
+                                        ) : "Submit Assignment"}
                                     </button>
                                 </form>
                             )}
@@ -488,9 +681,19 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                             <h3>Student Submissions List</h3>
                             
                             {submissions.length === 0 ? (
-                                <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No student has submitted this assignment yet.</p>
+                                <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                                    <div className="empty-state-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="8" x2="12" y2="12"/>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                        </svg>
+                                    </div>
+                                    <div className="empty-state-title">No submissions yet</div>
+                                    <div className="empty-state-text">No student has submitted work for this assignment yet.</div>
+                                </div>
                             ) : (
-                                <div className="table-responsive">
+                                <div className="table-responsive" style={{ marginTop: "1rem" }}>
                                     <table className="premium-table">
                                         <thead>
                                             <tr>
@@ -505,22 +708,44 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                                         <tbody>
                                             {submissions.map(sub => (
                                                 <tr key={sub._id}>
-                                                    <td>{sub.studentId?.studentId}</td>
+                                                    <td><strong>{sub.studentId?.studentId}</strong></td>
                                                     <td>{sub.studentId?.name}</td>
                                                     <td>{new Date(sub.submittedAt).toLocaleString()}</td>
                                                     <td>
-                                                        <span className={`badge ${sub.status === "graded" ? "badge-lecturer" : sub.status === "late" ? "badge-admin" : "badge-student"}`}>
+                                                        <span className={`badge badge-${sub.status === "graded" ? "success" : sub.status === "late" ? "danger" : "student"}`} style={{ fontSize: "0.7rem", fontWeight: "700" }}>
                                                             {sub.status}
                                                         </span>
                                                     </td>
-                                                    <td>{sub.grade !== null ? `${sub.grade}/${selectedAssignment.maxMarks}` : "Not Graded"}</td>
                                                     <td>
-                                                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                                                            <a href={`http://localhost:5000${sub.fileUrl}`} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>
-                                                                Download file
+                                                        {sub.grade !== null ? (
+                                                            <strong>{sub.grade} <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>/ {selectedAssignment.maxMarks}</span></strong>
+                                                        ) : (
+                                                            <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Not Graded</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                                                            <a 
+                                                                href={`http://localhost:5000${sub.fileUrl}`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer" 
+                                                                className="btn-icon" 
+                                                                title="Download Submission File"
+                                                                style={{ color: "var(--primary-400)", background: "rgba(255,255,255,0.02)" }}
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "14px", height: "14px" }}>
+                                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                                                </svg>
                                                             </a>
-                                                            <button onClick={() => { setGradingSubId(sub._id); setGrade(sub.grade || ""); setFeedback(sub.feedback || ""); }} className="btn btn-primary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>
-                                                                Grade
+                                                            <button 
+                                                                onClick={() => { setGradingSubId(sub._id); setGrade(sub.grade || ""); setFeedback(sub.feedback || ""); }} 
+                                                                className="btn btn-primary btn-sm"
+                                                                style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.2rem" }}
+                                                            >
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "12px", height: "12px" }}>
+                                                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                                                </svg>
+                                                                <span>Grade</span>
                                                             </button>
                                                         </div>
                                                     </td>
@@ -531,9 +756,9 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                                 </div>
                             )}
 
-                            {/* Grading Modal mockup */}
+                            {/* Grading form */}
                             {gradingSubId && (
-                                <div className="glass-card" style={{ marginTop: "2rem", maxWidth: "500px" }}>
+                                <div className="glass-card-static animate-scale-in" style={{ marginTop: "2rem", maxWidth: "500px" }}>
                                     <h4>Grade Student Work</h4>
                                     <form onSubmit={handleGradeSubmission} style={{ marginTop: "1rem" }}>
                                         <div className="form-group">
@@ -545,8 +770,8 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                                             <textarea className="form-input" rows="3" placeholder="Provide constructive criticism..." value={feedback} onChange={e => setFeedback(e.target.value)}></textarea>
                                         </div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button type="submit" className="btn btn-primary">Save Grade</button>
-                                            <button type="button" onClick={() => setGradingSubId(null)} className="btn btn-outline">Cancel</button>
+                                            <button type="submit" className="btn btn-primary btn-sm">Save Grade</button>
+                                            <button type="button" onClick={() => setGradingSubId(null)} className="btn btn-outline btn-sm">Cancel</button>
                                         </div>
                                     </form>
                                 </div>
@@ -556,23 +781,36 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                 </div>
             ) : (
                 // ASSIGNMENTS LIST VIEW
-                <div style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.2fr 1fr" : "1fr", gap: "2rem" }}>
-                    <div className="glass-card">
+                <div className="form-row" style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.4fr 1fr" : "1fr", gap: "2rem" }}>
+                    <div className="glass-card-static animate-fade-in" style={{ display: "flex", flexDirection: "column" }}>
                         <h3>Assignments List</h3>
                         {assignments.length === 0 ? (
-                            <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No assignments posted yet.</p>
+                            <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                                <div className="empty-state-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                    </svg>
+                                </div>
+                                <div className="empty-state-title">No assignments posted</div>
+                                <div className="empty-state-text">No assignments have been assigned to this section yet.</div>
+                            </div>
                         ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem", flex: 1 }}>
                                 {assignments.map(ass => (
-                                    <div key={ass._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
+                                    <div key={ass._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                                         <div>
-                                            <div style={{ fontWeight: "600" }}>{ass.title}</div>
-                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
-                                                Due Date: {new Date(ass.dueDate).toLocaleString()} • Marks: {ass.maxMarks}
+                                            <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{ass.title}</div>
+                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                                <span className={isOverdue(ass.dueDate) ? "badge badge-danger" : "badge badge-student"} style={{ fontSize: "0.65rem" }}>Due: {new Date(ass.dueDate).toLocaleDateString()}</span>
+                                                <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", fontSize: "0.65rem", color: "var(--text-main)" }}>Points: {ass.maxMarks}</span>
                                             </div>
                                         </div>
-                                        <button onClick={() => loadAssignmentDetails(ass._id)} className="btn btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.85rem" }}>
-                                            Open Assignment Workspace
+                                        <button onClick={() => loadAssignmentDetails(ass._id)} className="btn btn-primary btn-sm" style={{ padding: "0.45rem 1rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span>Open</span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                <polyline points="9 18 15 12 9 6"/>
+                                            </svg>
                                         </button>
                                     </div>
                                 ))}
@@ -581,11 +819,11 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                     </div>
 
                     {user.role !== "student" && (
-                        <div className="glass-card">
+                        <div className="glass-card-static" style={{ height: "fit-content" }}>
                             <h3>Create New Assignment</h3>
-                            {error && <div className="alert alert-danger">{error}</div>}
+                            {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
 
-                            <form onSubmit={handleCreateAssignment}>
+                            <form onSubmit={handleCreateAssignment} style={{ marginTop: "1.25rem" }}>
                                 <div className="form-group">
                                     <label>Assignment Title</label>
                                     <input type="text" className="form-input" placeholder="e.g. Midterm Essay" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -604,10 +842,15 @@ const AssignmentsTab = ({ assignments, courseId, user, enrolledStudents, onUpdat
                                 </div>
                                 <div className="form-group">
                                     <label>Guideline File Attachment (Optional)</label>
-                                    <input type="file" onChange={e => setFile(e.target.files[0])} />
+                                    <input type="file" onChange={e => setFile(e.target.files[0])} style={{ color: "var(--text-muted)", marginTop: "0.25rem" }} />
                                 </div>
-                                <button type="submit" className="btn btn-primary" disabled={submitting} style={{ width: "100%", marginTop: "1rem" }}>
-                                    {submitting ? "Posting..." : "Post Assignment"}
+                                <button type="submit" className="btn btn-primary" disabled={submitting} style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>
+                                    {submitting ? (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                            <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                            <span>Posting...</span>
+                                        </div>
+                                    ) : "Post Assignment"}
                                 </button>
                             </form>
                         </div>
@@ -712,44 +955,82 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
         }
     };
 
+    const isOverdue = (dueDateStr) => {
+        return new Date(dueDateStr) < new Date();
+    };
+
     return (
         <div>
             {selectedQuiz ? (
                 // SELECTED QUIZ SETUP/RESULTS PORTAL
-                <div className="glass-card">
-                    <button onClick={() => setSelectedQuiz(null)} className="btn btn-outline" style={{ marginBottom: "1.5rem" }}>
-                        ⬅ Back to Quizzes List
+                <div className="glass-card-static animate-scale-in">
+                    <button 
+                        onClick={() => setSelectedQuiz(null)} 
+                        className="btn btn-outline btn-sm" 
+                        style={{ marginBottom: "1.5rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        <span>Back to Quizzes List</span>
                     </button>
                     <h2>{selectedQuiz.title}</h2>
-                    <p style={{ margin: "1rem 0" }}>{selectedQuiz.description}</p>
-                    <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "2rem" }}>
-                        <span>⏱ Duration: {selectedQuiz.durationMinutes} minutes</span>
-                        <span>📅 Due Date: {new Date(selectedQuiz.dueDate).toLocaleString()}</span>
+                    <p style={{ margin: "1rem 0", lineHeight: "1.5", color: "var(--text-main)" }}>{selectedQuiz.description}</p>
+                    <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "2rem", flexWrap: "wrap", alignItems: "center" }}>
+                        <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: "600", color: "var(--text-main)" }}>
+                            ⏱ Duration: {selectedQuiz.durationMinutes} minutes
+                        </span>
+                        <span className={`badge ${isOverdue(selectedQuiz.dueDate) ? "badge-danger" : "badge-student"}`} style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: "600" }}>
+                            Due Date: {new Date(selectedQuiz.dueDate).toLocaleString()}
+                        </span>
                     </div>
 
                     {user.role !== "student" ? (
                         // LECTURER VIEW: EDIT QUESTIONS & ROSTER RESULTS
-                        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem", borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
+                        <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem", borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
                             
                             <div>
                                 <h3>Quiz Questions ({questions.length})</h3>
                                 {questions.length === 0 ? (
-                                    <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No questions added to this quiz yet.</p>
+                                    <div className="empty-state animate-fade-in" style={{ padding: "3rem 1rem", border: "1px dashed var(--border-color)" }}>
+                                        <div className="empty-state-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                            </svg>
+                                        </div>
+                                        <div className="empty-state-title">No questions added</div>
+                                        <div className="empty-state-text">Build this exam by adding questions in the builder panel.</div>
+                                    </div>
                                 ) : (
                                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
                                         {questions.map((q, idx) => (
-                                            <div key={q._id} style={{ background: "rgba(0,0,0,0.15)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-                                                <strong>{idx + 1}. {q.text}</strong>{" "}
-                                                <span style={{ float: "right", fontSize: "0.8rem", color: "var(--text-muted)" }}>({q.points} pts)</span>
-                                                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Type: {q.type.toUpperCase()}</p>
+                                            <div key={q._id} className="glass-card-inner" style={{ padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                                                    <strong>{idx + 1}. {q.text}</strong>
+                                                    <span className="badge badge-student" style={{ fontSize: "0.7rem", fontWeight: "700" }}>{q.points} pts</span>
+                                                </div>
+                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>Type: {q.type.toUpperCase()}</div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                <h3 style={{ marginTop: "2rem", marginBottom: "1rem" }}>Student Submissions Results</h3>
+                                <h3 style={{ marginTop: "2.5rem", marginBottom: "1rem" }}>Student Submissions Results</h3>
                                 {results.length === 0 ? (
-                                    <p style={{ color: "var(--text-muted)" }}>No attempts submitted yet.</p>
+                                    <div className="empty-state" style={{ padding: "3rem 1rem", border: "1px dashed var(--border-color)" }}>
+                                        <div className="empty-state-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                            </svg>
+                                        </div>
+                                        <div className="empty-state-title">No attempts yet</div>
+                                        <div className="empty-state-text">No student attempts recorded for this quiz yet.</div>
+                                    </div>
                                 ) : (
                                     <div className="table-responsive">
                                         <table className="premium-table">
@@ -764,11 +1045,11 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                             <tbody>
                                                 {results.map(res => (
                                                     <tr key={res._id}>
-                                                        <td>{res.studentId?.studentId}</td>
+                                                        <td><strong>{res.studentId?.studentId}</strong></td>
                                                         <td>{res.studentId?.name}</td>
                                                         <td><strong>{res.score}</strong> / {res.totalMarks}</td>
                                                         <td>
-                                                            <span className={`badge ${res.graded ? "badge-lecturer" : "badge-admin"}`}>
+                                                            <span className={`badge badge-${res.graded ? "success" : "warning"}`} style={{ fontSize: "0.7rem", fontWeight: "700" }}>
                                                                 {res.graded ? "Graded" : "Needs Grading (Short Answer)"}
                                                             </span>
                                                         </td>
@@ -781,12 +1062,12 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                             </div>
 
                             {/* ADD QUESTION FORM BUILDER */}
-                            <div className="glass-card" style={{ background: "rgba(0,0,0,0.2)" }}>
+                            <div className="glass-card-static" style={{ background: "rgba(0,0,0,0.15)", height: "fit-content" }}>
                                 <h3>Add Question</h3>
-                                <form onSubmit={handleAddQuestion} style={{ marginTop: "1rem" }}>
+                                <form onSubmit={handleAddQuestion} style={{ marginTop: "1.25rem" }}>
                                     <div className="form-group">
                                         <label>Question Type</label>
-                                        <select className="form-input" value={qType} onChange={e => { setQType(e.target.value); setQAnswer(e.target.value === "true_false" ? "true" : "0"); }} style={{ background: "var(--bg-dark)" }}>
+                                        <select className="form-input" value={qType} onChange={e => { setQType(e.target.value); setQAnswer(e.target.value === "true_false" ? "true" : "0"); }} style={{ background: "var(--background-dark)" }}>
                                             <option value="mcq">Multiple Choice Question (MCQ)</option>
                                             <option value="true_false">True / False</option>
                                             <option value="short_answer">Short / Written Answer</option>
@@ -799,7 +1080,7 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                     </div>
 
                                     {qType === "mcq" && (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1rem" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1rem" }} className="animate-slide-down">
                                             <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>MCQ Choices</label>
                                             {qOptions.map((opt, i) => (
                                                 <input key={i} type="text" className="form-input" placeholder={`Option ${i+1}`} value={opt} onChange={e => {
@@ -808,9 +1089,9 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                                     setQOptions(copy);
                                                 }} required />
                                             ))}
-                                            <div className="form-group" style={{ marginTop: "0.5rem" }}>
+                                            <div className="form-group" style={{ marginTop: "0.75rem" }}>
                                                 <label>Correct Choice index</label>
-                                                <select className="form-input" value={qAnswer} onChange={e => setQAnswer(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                                                <select className="form-input" value={qAnswer} onChange={e => setQAnswer(e.target.value)} style={{ background: "var(--background-dark)" }}>
                                                     <option value="0">Choice 1</option>
                                                     <option value="1">Choice 2</option>
                                                     <option value="2">Choice 3</option>
@@ -821,9 +1102,9 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                     )}
 
                                     {qType === "true_false" && (
-                                        <div className="form-group">
+                                        <div className="form-group animate-slide-down">
                                             <label>Correct Answer Key</label>
-                                            <select className="form-input" value={qAnswer} onChange={e => setQAnswer(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                                            <select className="form-input" value={qAnswer} onChange={e => setQAnswer(e.target.value)} style={{ background: "var(--background-dark)" }}>
                                                 <option value="true">True</option>
                                                 <option value="false">False</option>
                                             </select>
@@ -831,7 +1112,7 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                     )}
 
                                     {qType === "short_answer" && (
-                                        <div className="form-group">
+                                        <div className="form-group animate-slide-down">
                                             <label>Grading Rubric Key / Expected Keywords</label>
                                             <input type="text" className="form-input" placeholder="e.g. key terms to look for..." value={qAnswer} onChange={e => setQAnswer(e.target.value)} required />
                                         </div>
@@ -842,7 +1123,7 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                         <input type="number" className="form-input" value={qPoints} onChange={e => setQPoints(parseInt(e.target.value))} required />
                                     </div>
 
-                                    <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
+                                    <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem", justifyContent: "center" }}>
                                         Add to Quiz
                                     </button>
                                 </form>
@@ -853,21 +1134,37 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                         <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
                             <h3>My Attempt Roster</h3>
                             {results.length > 0 ? (
-                                <div style={{ background: "rgba(16, 185, 129, 0.05)", border: "1px solid var(--success)", padding: "1.5rem", borderRadius: "8px", marginTop: "1rem", maxWidth: "500px" }}>
-                                    <h4 style={{ color: "var(--success)" }}>Quiz Attempted successfully!</h4>
-                                    <div style={{ margin: "1rem 0" }}>
-                                        <strong>Grading:</strong> {results[0].graded ? "Evaluated" : "Pending written grading"} <br />
-                                        <strong>Final Score:</strong> {results[0].score} / {results[0].totalMarks}
+                                <div className="glass-card-inner" style={{ borderLeft: "3px solid var(--success)", padding: "1.5rem", borderRadius: "12px", marginTop: "1rem", maxWidth: "500px", background: "rgba(16, 185, 129, 0.04)" }}>
+                                    <h4 style={{ color: "var(--success)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "18px", height: "18px" }}>
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        Quiz Attempted successfully!
+                                    </h4>
+                                    <div style={{ margin: "1rem 0", lineHeight: "1.6" }}>
+                                        <strong>Grading State:</strong> <span className={`badge badge-${results[0].graded ? "success" : "warning"}`} style={{ fontSize: "0.7rem", padding: "0.15rem 0.4rem" }}>{results[0].graded ? "Evaluated" : "Pending Manual Grading"}</span> <br />
+                                        <div style={{ fontSize: "1.1rem", marginTop: "0.5rem" }}><strong>Final Score:</strong> <span style={{ color: "var(--success)", fontWeight: "700" }}>{results[0].score}</span> / {results[0].totalMarks}</div>
                                     </div>
-                                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                        Submitted on: {new Date(results[0].createdAt).toLocaleString()}
+                                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", borderTop: "1px dashed rgba(255,255,255,0.06)", paddingTop: "0.5rem" }}>
+                                        Submitted: {new Date(results[0].createdAt).toLocaleString()}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center" style={{ padding: "2rem" }}>
-                                    <p style={{ marginBottom: "1.5rem" }}>You have not attempted this timed quiz yet. The timer will start immediately upon load.</p>
-                                    <button onClick={() => navigate(`/courses/${courseId}/quizzes/${selectedQuiz._id}`)} className="btn btn-primary" style={{ padding: "0.8rem 2rem" }}>
-                                        🚀 Start Timed Quiz
+                                <div className="empty-state" style={{ padding: "3rem 1rem", border: "1px dashed var(--border-color)", maxWidth: "600px", marginTop: "1rem" }}>
+                                    <div className="empty-state-icon" style={{ color: "var(--warning)" }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="8" x2="12" y2="12"/>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                        </svg>
+                                    </div>
+                                    <div className="empty-state-title">Quiz not attempted yet</div>
+                                    <div className="empty-state-text" style={{ marginBottom: "1.5rem" }}>This is a timed quiz session. Once loaded, the countdown timer starts immediately.</div>
+                                    <button onClick={() => navigate(`/courses/${courseId}/quizzes/${selectedQuiz._id}`)} className="btn btn-primary" style={{ padding: "0.6rem 2rem", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "16px", height: "16px" }}>
+                                            <polygon points="5 3 19 12 5 21 5 3"/>
+                                        </svg>
+                                        <span>Start Timed Quiz</span>
                                     </button>
                                 </div>
                             )}
@@ -876,23 +1173,36 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                 </div>
             ) : (
                 // QUIZZES LIST VIEW
-                <div style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.2fr 1fr" : "1fr", gap: "2rem" }}>
-                    <div className="glass-card">
-                        <h3>Quizzes & Midterms</h3>
+                <div className="form-row" style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.4fr 1fr" : "1fr", gap: "2rem" }}>
+                    <div className="glass-card-static animate-fade-in" style={{ display: "flex", flexDirection: "column" }}>
+                        <h3>Quizzes & Exams</h3>
                         {quizzes.length === 0 ? (
-                            <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No quizzes created yet.</p>
+                            <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                                <div className="empty-state-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                </div>
+                                <div className="empty-state-title">No quizzes created</div>
+                                <div className="empty-state-text">No quiz evaluations are assigned to this course catalog yet.</div>
+                            </div>
                         ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem", flex: 1 }}>
                                 {quizzes.map(q => (
-                                    <div key={q._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
+                                    <div key={q._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                                         <div>
-                                            <div style={{ fontWeight: "600" }}>{q.title}</div>
-                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
-                                                Time limit: {q.durationMinutes} mins • Due: {new Date(q.dueDate).toLocaleString()}
+                                            <div style={{ fontWeight: "600", color: "var(--text-main)" }}>{q.title}</div>
+                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                                <span className="badge badge-student" style={{ fontSize: "0.65rem" }}>Limit: {q.durationMinutes} mins</span>
+                                                <span className={isOverdue(q.dueDate) ? "badge badge-danger" : "badge"} style={{ background: isOverdue(q.dueDate) ? "" : "rgba(255,255,255,0.06)", border: isOverdue(q.dueDate) ? "" : "1px solid var(--border-color)", fontSize: "0.65rem", color: isOverdue(q.dueDate) ? "" : "var(--text-main)" }}>Due: {new Date(q.dueDate).toLocaleDateString()}</span>
                                             </div>
                                         </div>
-                                        <button onClick={() => loadQuizDetails(q._id)} className="btn btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.85rem" }}>
-                                            Open Quiz Portal
+                                        <button onClick={() => loadQuizDetails(q._id)} className="btn btn-primary btn-sm" style={{ padding: "0.45rem 1rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span>Open</span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                <polyline points="9 18 15 12 9 6"/>
+                                            </svg>
                                         </button>
                                     </div>
                                 ))}
@@ -901,12 +1211,12 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                     </div>
 
                     {user.role !== "student" && (
-                        <div className="glass-card">
+                        <div className="glass-card-static" style={{ height: "fit-content" }}>
                             <h3>Create New Quiz Shell</h3>
-                            {error && <div className="alert alert-danger">{error}</div>}
-                            {success && <div className="alert alert-success">{success}</div>}
+                            {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
+                            {success && <div className="alert alert-success animate-fade-in" style={{ marginTop: "1rem" }}>{success}</div>}
 
-                            <form onSubmit={handleCreateQuiz}>
+                            <form onSubmit={handleCreateQuiz} style={{ marginTop: "1.25rem" }}>
                                 <div className="form-group">
                                     <label>Quiz Title</label>
                                     <input type="text" className="form-input" placeholder="e.g. Chapter 1 Quiz" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -923,7 +1233,7 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                     <label>Due Date & Time</label>
                                     <input type="datetime-local" className="form-input" value={dueDate} onChange={e => setDueDate(e.target.value)} required />
                                 </div>
-                                <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem" }}>
+                                <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>
                                     Create Quiz Shell
                                 </button>
                             </form>
@@ -950,7 +1260,10 @@ const AttendanceTab = ({ attendanceStats, studentAttendance, courseId, user, enr
             enrolledStudents.forEach(stu => {
                 initial[stu._id] = "present";
             });
-            setMarks(initial);
+            const timer = setTimeout(() => {
+                setMarks(initial);
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [enrolledStudents]);
 
@@ -990,20 +1303,30 @@ const AttendanceTab = ({ attendanceStats, studentAttendance, courseId, user, enr
             {user.role === "student" ? (
                 // STUDENT VIEW
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
-                    <div className="glass-card text-center" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                    <div className="glass-card-static text-center" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "2rem" }}>
                         <h3>Overall Attendance</h3>
-                        <div className="value" style={{ fontSize: "3rem", margin: "1.5rem 0", color: studentAttendance.percentage >= 75 ? "var(--success)" : "var(--error)" }}>
+                        <div className="value" style={{ fontSize: "3.5rem", margin: "1.5rem 0", color: studentAttendance.percentage >= 75 ? "var(--success)" : "var(--error)", fontWeight: "800" }}>
                             {studentAttendance.percentage}%
                         </div>
-                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: "1.4" }}>
                             {studentAttendance.percentage >= 75 ? "You meet the minimum 75% attendance criteria! 👍" : "Warning: Attendance falls below 75% required minimum! 🚨"}
                         </p>
                     </div>
 
-                    <div className="glass-card">
-                        <h3>Attendance Log history</h3>
+                    <div className="glass-card-static">
+                        <h3>Attendance Log History</h3>
                         {(!studentAttendance.data || studentAttendance.data.length === 0) ? (
-                            <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No attendance marked yet.</p>
+                            <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                                <div className="empty-state-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                    </svg>
+                                </div>
+                                <div className="empty-state-title">No check-ins recorded</div>
+                                <div className="empty-state-text">No attendance records have been registered for your account.</div>
+                            </div>
                         ) : (
                             <div className="table-responsive" style={{ marginTop: "1rem" }}>
                                 <table className="premium-table">
@@ -1016,9 +1339,9 @@ const AttendanceTab = ({ attendanceStats, studentAttendance, courseId, user, enr
                                     <tbody>
                                         {studentAttendance.data.map((log, idx) => (
                                             <tr key={idx}>
-                                                <td>{new Date(log.date).toLocaleDateString()}</td>
+                                                <td><strong>{new Date(log.date).toLocaleDateString()}</strong></td>
                                                 <td>
-                                                    <span className={`badge ${log.status === "present" ? "badge-lecturer" : log.status === "absent" ? "badge-admin" : "badge-student"}`}>
+                                                    <span className={`badge badge-${log.status === "present" ? "success" : log.status === "absent" ? "danger" : "warning"}`} style={{ fontSize: "0.75rem", fontWeight: "700" }}>
                                                         {log.status.toUpperCase()}
                                                     </span>
                                                 </td>
@@ -1032,50 +1355,115 @@ const AttendanceTab = ({ attendanceStats, studentAttendance, courseId, user, enr
                 </div>
             ) : (
                 // LECTURER VIEW: ROSTER AND MARKING GRID
-                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
+                <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
                     
                     {/* Mark Daily Attendance */}
-                    <div className="glass-card">
+                    <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                         <h3>Mark Daily Attendance</h3>
-                        <form onSubmit={handleMarkAttendance} style={{ marginTop: "1rem" }}>
+                        <form onSubmit={handleMarkAttendance} style={{ marginTop: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
                             <div className="form-group" style={{ maxWidth: "250px" }}>
                                 <label>Lecture Date</label>
                                 <input type="date" className="form-input" value={markingDate} onChange={e => setMarkingDate(e.target.value)} required />
                             </div>
 
                             {enrolledStudents.length === 0 ? (
-                                <p style={{ color: "var(--text-muted)" }}>No students enrolled in this course.</p>
+                                <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                                    <div className="empty-state-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="9" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                    <div className="empty-state-title">No students enrolled</div>
+                                    <div className="empty-state-text">No student rosters are assigned to this course.</div>
+                                </div>
                             ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", margin: "1.5rem 0" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", margin: "1.5rem 0", flex: 1 }}>
                                     {enrolledStudents.map(student => (
-                                        <div key={student._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.8rem 1rem", background: "rgba(0,0,0,0.15)", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                                        <div key={student._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.8rem 1rem", borderRadius: "12px", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "0.5rem" }}>
                                             <div>
-                                                <span style={{ fontWeight: "600" }}>{student.name}</span>
+                                                <span style={{ fontWeight: "600", color: "var(--text-main)" }}>{student.name}</span>
                                                 <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginLeft: "0.5rem" }}>({student.studentId})</span>
                                             </div>
-                                            <div style={{ display: "flex", gap: "0.5rem" }}>
-                                                <button type="button" onClick={() => handleStatusChange(student._id, "present")} className={`btn ${marks[student._id] === "present" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Present</button>
-                                                <button type="button" onClick={() => handleStatusChange(student._id, "absent")} className={`btn ${marks[student._id] === "absent" ? "btn-danger" : "btn-outline"}`} style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Absent</button>
-                                                <button type="button" onClick={() => handleStatusChange(student._id, "late")} className={`btn ${marks[student._id] === "late" ? "btn-outline" : "btn-outline"}`} style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", background: marks[student._id] === "late" ? "rgba(245, 158, 11, 0.2)" : "", color: marks[student._id] === "late" ? "#fbbf24" : "" }}>Late</button>
+                                            <div style={{ display: "flex", gap: "0.4rem" }}>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => handleStatusChange(student._id, "present")} 
+                                                    className="btn btn-sm"
+                                                    style={{ 
+                                                        padding: "0.3rem 0.6rem", 
+                                                        fontSize: "0.75rem", 
+                                                        background: marks[student._id] === "present" ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.02)",
+                                                        color: marks[student._id] === "present" ? "var(--success)" : "var(--text-muted)",
+                                                        border: marks[student._id] === "present" ? "1px solid var(--success)" : "1px solid var(--border-color)",
+                                                        fontWeight: "600"
+                                                    }}
+                                                >
+                                                    Present
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => handleStatusChange(student._id, "absent")} 
+                                                    className="btn btn-sm"
+                                                    style={{ 
+                                                        padding: "0.3rem 0.6rem", 
+                                                        fontSize: "0.75rem", 
+                                                        background: marks[student._id] === "absent" ? "rgba(239, 68, 68, 0.2)" : "rgba(255,255,255,0.02)",
+                                                        color: marks[student._id] === "absent" ? "var(--error)" : "var(--text-muted)",
+                                                        border: marks[student._id] === "absent" ? "1px solid var(--error)" : "1px solid var(--border-color)",
+                                                        fontWeight: "600"
+                                                    }}
+                                                >
+                                                    Absent
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => handleStatusChange(student._id, "late")} 
+                                                    className="btn btn-sm"
+                                                    style={{ 
+                                                        padding: "0.3rem 0.6rem", 
+                                                        fontSize: "0.75rem", 
+                                                        background: marks[student._id] === "late" ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.02)",
+                                                        color: marks[student._id] === "late" ? "#fbbf24" : "var(--text-muted)",
+                                                        border: marks[student._id] === "late" ? "1px solid #fbbf24" : "1px solid var(--border-color)",
+                                                        fontWeight: "600"
+                                                    }}
+                                                >
+                                                    Late
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            <button type="submit" className="btn btn-primary" disabled={submitting || enrolledStudents.length === 0}>
-                                {submitting ? "Saving Register..." : "Submit Attendance Register"}
+                            <button type="submit" className="btn btn-primary" disabled={submitting || enrolledStudents.length === 0} style={{ width: "100%", justifyContent: "center" }}>
+                                {submitting ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                        <span>Saving register...</span>
+                                    </div>
+                                ) : "Submit Attendance Register"}
                             </button>
                         </form>
                     </div>
 
                     {/* Attendance stats summary */}
-                    <div className="glass-card">
+                    <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                         <h3>Attendance Stats Roster</h3>
                         {attendanceStats.length === 0 ? (
-                            <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No registers submitted yet.</p>
+                            <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                                <div className="empty-state-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                </div>
+                                <div className="empty-state-title">No data recorded</div>
+                                <div className="empty-state-text">No attendance records submitted for stats calculations yet.</div>
+                            </div>
                         ) : (
-                            <div className="table-responsive" style={{ marginTop: "1rem" }}>
+                            <div className="table-responsive" style={{ flex: 1, marginTop: "1rem" }}>
                                 <table className="premium-table">
                                     <thead>
                                         <tr>
@@ -1185,6 +1573,7 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
             setSelectedThread(null);
             onUpdate();
         } catch (err) {
+            console.error(err);
             alert("Delete failed");
         }
     };
@@ -1195,6 +1584,7 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
             await api.delete(`/forums/comments/${commentId}`);
             loadThreadDetails(selectedThread._id);
         } catch (err) {
+            console.error(err);
             alert("Delete failed");
         }
     };
@@ -1203,26 +1593,38 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
         <div>
             {selectedThread ? (
                 // THREAD DETAILS AND DISCUSSIONS VIEW
-                <div className="glass-card">
-                    <button onClick={() => setSelectedThread(null)} className="btn btn-outline" style={{ marginBottom: "1.5rem" }}>
-                        ⬅ Back to Discussions
+                <div className="glass-card-static animate-scale-in">
+                    <button 
+                        onClick={() => setSelectedThread(null)} 
+                        className="btn btn-outline btn-sm" 
+                        style={{ marginBottom: "1.5rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        <span>Back to Discussions</span>
                     </button>
 
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
                         <div>
                             <h2>{selectedThread.title}</h2>
-                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0" }}>
-                                By <strong>{selectedThread.authorId?.name}</strong> ({selectedThread.authorId?.role}) • Posted: {new Date(selectedThread.createdAt).toLocaleString()}
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>
+                                By <strong style={{ color: "var(--text-main)" }}>{selectedThread.authorId?.name}</strong> ({selectedThread.authorId?.role}) • Posted: {new Date(selectedThread.createdAt).toLocaleString()}
                             </div>
                         </div>
                         {(user.role === "admin" || selectedThread.authorId?._id === user.id) && (
-                            <button onClick={() => handleDeleteThread(selectedThread._id)} className="btn btn-danger" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
-                                Delete Thread
+                            <button onClick={() => handleDeleteThread(selectedThread._id)} className="btn btn-danger btn-sm" style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "14px", height: "14px" }}>
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                                <span>Delete Thread</span>
                             </button>
                         )}
                     </div>
                     
-                    <p style={{ marginTop: "1rem", whiteSpace: "pre-wrap", background: "rgba(0,0,0,0.15)", padding: "1.5rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                    <p style={{ marginTop: "1.25rem", whiteSpace: "pre-wrap", background: "rgba(0,0,0,0.15)", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border-color)", lineHeight: "1.6" }}>
                         {selectedThread.content}
                     </p>
 
@@ -1232,11 +1634,11 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
 
                         <div style={{ marginTop: "1.5rem" }}>
                             {comments.map(comment => (
-                                <div key={comment._id} className="forum-comment-card" style={{ padding: "0.8rem", background: "rgba(255,255,255,0.01)", borderRadius: "8px", marginBottom: "1rem" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                        <span style={{ fontSize: "0.85rem" }}>
-                                            <strong>{comment.authorId?.name}</strong>{" "}
-                                            <span className={`badge badge-${comment.authorId?.role}`} style={{ fontSize: "0.65rem", padding: "0.2rem 0.4rem", marginLeft: "0.5rem" }}>
+                                <div key={comment._id} className="forum-comment-card" style={{ padding: "1.25rem", background: "rgba(255,255,255,0.01)", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "1rem" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                                        <span style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                            <strong style={{ color: "var(--text-main)" }}>{comment.authorId?.name}</strong>
+                                            <span className={`badge badge-${comment.authorId?.role}`} style={{ fontSize: "0.65rem", padding: "0.2rem 0.4rem" }}>
                                                 {comment.authorId?.role}
                                             </span>
                                         </span>
@@ -1244,21 +1646,33 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
                                             {new Date(comment.createdAt).toLocaleString()}
                                         </span>
                                     </div>
-                                    <p style={{ margin: "0.5rem 0", fontSize: "0.95rem" }}>{comment.content}</p>
+                                    <p style={{ margin: "0.5rem 0", fontSize: "0.92rem", lineHeight: "1.5", color: "var(--text-main)" }}>{comment.content}</p>
                                     
-                                    <div style={{ display: "flex", gap: "1rem" }}>
-                                        <button onClick={() => setReplyingToCommentId(comment._id)} className="link-alt" style={{ border: "none", background: "none", fontSize: "0.8rem", cursor: "pointer" }}>Reply</button>
+                                    <div style={{ display: "flex", gap: "1rem", marginTop: "0.75rem", borderTop: "1px dashed rgba(255,255,255,0.04)", paddingTop: "0.5rem" }}>
+                                        <button onClick={() => setReplyingToCommentId(comment._id)} className="link-alt" style={{ border: "none", background: "none", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                <polyline points="9 17 4 12 9 7"/>
+                                                <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
+                                            </svg>
+                                            <span>Reply</span>
+                                        </button>
                                         {(user.role === "admin" || comment.authorId?._id === user.id) && (
-                                            <button onClick={() => handleDeleteComment(comment._id)} className="btn-danger" style={{ border: "none", background: "none", fontSize: "0.8rem", cursor: "pointer", color: "var(--error)" }}>Delete</button>
+                                            <button onClick={() => handleDeleteComment(comment._id)} className="link-alt" style={{ border: "none", background: "none", fontSize: "0.8rem", cursor: "pointer", color: "var(--error)", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                                </svg>
+                                                <span>Delete</span>
+                                            </button>
                                         )}
                                     </div>
 
                                     {replyingToCommentId === comment._id && (
-                                        <form onSubmit={(e) => handlePostComment(e, comment._id)} style={{ marginTop: "1rem", maxWidth: "400px" }}>
+                                        <form onSubmit={(e) => handlePostComment(e, comment._id)} style={{ marginTop: "1rem", maxWidth: "500px" }} className="animate-slide-down">
                                             <input type="text" className="form-input" placeholder="Write a reply..." value={replyText} onChange={e => setReplyText(e.target.value)} required />
                                             <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                                                <button type="submit" className="btn btn-primary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}>Post Reply</button>
-                                                <button type="button" onClick={() => setReplyingToCommentId(null)} className="btn btn-outline" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}>Cancel</button>
+                                                <button type="submit" className="btn btn-primary btn-sm">Post Reply</button>
+                                                <button type="button" onClick={() => setReplyingToCommentId(null)} className="btn btn-outline btn-sm">Cancel</button>
                                             </div>
                                         </form>
                                     )}
@@ -1267,36 +1681,47 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
                         </div>
 
                         {/* Top-level comment box */}
-                        <form onSubmit={(e) => handlePostComment(e, null)} style={{ marginTop: "2rem", maxWidth: "600px" }}>
+                        <form onSubmit={(e) => handlePostComment(e, null)} style={{ marginTop: "2.5rem", maxWidth: "600px" }}>
                             <h4>Join the Discussion</h4>
                             <div className="form-group" style={{ marginTop: "1rem" }}>
                                 <textarea className="form-input" rows="3" placeholder="Post an answer or ask a question..." value={commentText} onChange={e => setCommentText(e.target.value)} required></textarea>
                             </div>
-                            <button type="submit" className="btn btn-primary">Submit Comment</button>
+                            <button type="submit" className="btn btn-primary btn-sm">Submit Comment</button>
                         </form>
                     </div>
                 </div>
             ) : (
                 // THREADS LIST VIEW
-                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
-                    <div className="glass-card">
+                <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+                    <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                         <h3>Discussions Forum</h3>
                         {threads.length === 0 ? (
-                            <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No discussion topics started. Be the first to start a thread!</p>
+                            <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                                <div className="empty-state-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                </div>
+                                <div className="empty-state-title">No threads active</div>
+                                <div className="empty-state-text">Be the first to start a conversation in this course.</div>
+                            </div>
                         ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem", flex: 1 }}>
                                 {threads.map(thread => (
-                                    <div key={thread._id} className="forum-thread-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div key={thread._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                                         <div>
-                                            <div onClick={() => loadThreadDetails(thread._id)} style={{ fontWeight: "600", cursor: "pointer", fontSize: "1.1rem" }} className="link-alt">
+                                            <div onClick={() => loadThreadDetails(thread._id)} style={{ fontWeight: "600", cursor: "pointer", fontSize: "1.02rem" }} className="link-alt">
                                                 {thread.title}
                                             </div>
-                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>
+                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
                                                 By {thread.authorId?.name} ({thread.authorId?.role}) • {new Date(thread.createdAt).toLocaleDateString()}
                                             </div>
                                         </div>
-                                        <button onClick={() => loadThreadDetails(thread._id)} className="btn btn-outline" style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>
-                                            Open Forum Thread
+                                        <button onClick={() => loadThreadDetails(thread._id)} className="btn btn-outline btn-sm" style={{ padding: "0.4rem 0.8rem", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                                            <span>Open</span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                <polyline points="9 18 15 12 9 6"/>
+                                            </svg>
                                         </button>
                                     </div>
                                 ))}
@@ -1304,9 +1729,9 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
                         )}
                     </div>
 
-                    <div className="glass-card">
+                    <div className="glass-card-static" style={{ height: "fit-content" }}>
                         <h3>Post New Thread</h3>
-                        <form onSubmit={handleCreateThread}>
+                        <form onSubmit={handleCreateThread} style={{ marginTop: "1.25rem" }}>
                             <div className="form-group">
                                 <label>Topic Title</label>
                                 <input type="text" className="form-input" placeholder="e.g. Question regarding Assignment 1" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -1315,8 +1740,13 @@ const ForumTab = ({ threads, courseId, user, onUpdate }) => {
                                 <label>Body / Description</label>
                                 <textarea className="form-input" rows="5" placeholder="Elaborate your discussion prompt..." value={content} onChange={e => setContent(e.target.value)} required></textarea>
                             </div>
-                            <button type="submit" className="btn btn-primary" disabled={posting} style={{ width: "100%", marginTop: "1rem" }}>
-                                {posting ? "Posting..." : "Create Thread Topic"}
+                            <button type="submit" className="btn btn-primary" disabled={posting} style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>
+                                {posting ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                        <span>Posting...</span>
+                                    </div>
+                                ) : "Create Thread Topic"}
                             </button>
                         </form>
                     </div>
@@ -1371,29 +1801,53 @@ const AnnouncementsTab = ({ announcements, courseId, user, onUpdate }) => {
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.2fr 1fr" : "1fr", gap: "2rem" }}>
-            <div className="glass-card">
+        <div className="form-row" style={{ display: "grid", gridTemplateColumns: user.role !== "student" ? "1.4fr 1fr" : "1fr", gap: "2rem" }}>
+            <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <h3>Course Announcements</h3>
 
                 {announcements.length === 0 ? (
-                    <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No announcements posted for this course.</p>
+                    <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
+                        <div className="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                        </div>
+                        <div className="empty-state-title">No notices posted</div>
+                        <div className="empty-state-text">No announcements posted for this course segment yet.</div>
+                    </div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", marginTop: "1.2rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", marginTop: "1.2rem", flex: 1 }}>
                         {announcements.map(ann => (
-                            <div key={ann._id} style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", position: "relative" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ fontWeight: "600", fontSize: "1.1rem", color: ann.priority === "high" ? "var(--error)" : "var(--text-main)" }}>
-                                        {ann.title} {ann.priority === "high" && "🚨"}
+                            <div key={ann._id} className="glass-card-inner" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", borderLeft: ann.priority === "high" ? "3px solid var(--error)" : "1px solid var(--border-color)", position: "relative" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                                    <span style={{ fontWeight: "600", fontSize: "1.05rem", color: ann.priority === "high" ? "var(--error)" : "var(--text-main)" }}>
+                                        {ann.title}
                                     </span>
-                                    {user.role !== "student" && (
-                                        <button onClick={() => handleDelete(ann._id)} className="btn btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                                            Remove Notice
-                                        </button>
-                                    )}
+                                    <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                                        {ann.priority === "high" && (
+                                            <span className="badge badge-danger" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem" }}>URGENT</span>
+                                        )}
+                                        {user.role !== "student" && (
+                                            <button 
+                                                onClick={() => handleDelete(ann._id)} 
+                                                className="btn-icon" 
+                                                title="Delete Announcement"
+                                                style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "12px", height: "12px" }}>
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", margin: "0.5rem 0", whiteSpace: "pre-wrap" }}>{ann.content}</p>
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                    Posted: {new Date(ann.createdAt).toLocaleString()} By {ann.authorId?.name}
+                                <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "0.5rem 0", whiteSpace: "pre-wrap", lineHeight: "1.5" }}>{ann.content}</p>
+                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", gap: "0.8rem", marginTop: "0.5rem", borderTop: "1px dashed rgba(255,255,255,0.04)", paddingTop: "0.5rem" }}>
+                                    <span>Posted by {ann.authorId?.name || "Lecturer"}</span>
+                                    <span>•</span>
+                                    <span>{new Date(ann.createdAt).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         ))}
@@ -1402,11 +1856,11 @@ const AnnouncementsTab = ({ announcements, courseId, user, onUpdate }) => {
             </div>
 
             {user.role !== "student" && (
-                <div className="glass-card">
+                <div className="glass-card-static" style={{ height: "fit-content" }}>
                     <h3>Post Course Announcement</h3>
-                    {error && <div className="alert alert-danger">{error}</div>}
+                    {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
 
-                    <form onSubmit={handlePost}>
+                    <form onSubmit={handlePost} style={{ marginTop: "1.25rem" }}>
                         <div className="form-group">
                             <label>Notice Title</label>
                             <input type="text" className="form-input" placeholder="e.g. Lecture Postponed" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -1417,13 +1871,18 @@ const AnnouncementsTab = ({ announcements, courseId, user, onUpdate }) => {
                         </div>
                         <div className="form-group">
                             <label>Priority</label>
-                            <select className="form-input" value={priority} onChange={e => setPriority(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                            <select className="form-input" value={priority} onChange={e => setPriority(e.target.value)} style={{ background: "var(--background-dark)" }}>
                                 <option value="normal">Normal Notice</option>
                                 <option value="high">Urgent/High Priority Notice 🚨</option>
                             </select>
                         </div>
-                        <button type="submit" className="btn btn-primary" disabled={posting} style={{ width: "100%", marginTop: "1rem" }}>
-                            {posting ? "Posting..." : "Post Announcement"}
+                        <button type="submit" className="btn btn-primary" disabled={posting} style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>
+                            {posting ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                    <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                    <span>Posting...</span>
+                                </div>
+                            ) : "Post Announcement"}
                         </button>
                     </form>
                 </div>

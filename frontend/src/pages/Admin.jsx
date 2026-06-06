@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
 const Admin = () => {
-    const { user } = useContext(AuthContext);
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const activeTab = searchParams.get("tab") || "users";
 
     // General state
@@ -32,16 +30,26 @@ const Admin = () => {
     };
 
     useEffect(() => {
-        loadCoreData();
+        const timer = setTimeout(() => {
+            loadCoreData();
+        }, 0);
+        return () => clearTimeout(timer);
     }, [activeTab]);
 
-    if (loading) return <div className="text-center">Loading Admin Panel Data...</div>;
+    if (loading) {
+        return (
+            <div className="loading-spinner" style={{ minHeight: "60vh" }}>
+                <div className="spinner"></div>
+                <p className="loading-text">Loading Admin Panel Data...</p>
+            </div>
+        );
+    }
 
     return (
-        <div>
-            <div className="glass-card" style={{ marginBottom: "2rem" }}>
+        <div className="animate-fade-in">
+            <div className="glass-card-static animate-slide-up stagger-1" style={{ marginBottom: "2rem" }}>
                 <h1 className="page-title">University Admin Console</h1>
-                <p style={{ color: "var(--text-muted)", margin: 0 }}>
+                <p className="page-subtitle" style={{ margin: 0 }}>
                     Global configuration settings. Academic structures, user rosters, course catalog, and active enrollment requests.
                 </p>
             </div>
@@ -74,7 +82,7 @@ const UsersPanel = ({ departments }) => {
     const [error, setError] = useState(null);
     const [createdTempPassword, setCreatedTempPassword] = useState("");
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
             const res = await api.get(`/users?role=${roleFilter}&search=${search}`);
@@ -84,11 +92,14 @@ const UsersPanel = ({ departments }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [roleFilter, search]);
 
     useEffect(() => {
-        fetchUsers();
-    }, [roleFilter, search]);
+        const timer = setTimeout(() => {
+            fetchUsers();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchUsers]);
 
     const handleCreateUser = async (e) => {
         e.preventDefault();
@@ -149,46 +160,51 @@ const UsersPanel = ({ departments }) => {
             await api.delete(`/users/${uId}`);
             fetchUsers();
         } catch (err) {
+            console.error(err);
             alert("Delete failed");
         }
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
-            <div className="glass-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                    <h3>User Accounts Registry</h3>
+        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+            <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                    <h3 style={{ margin: 0 }}>User Accounts Registry</h3>
                     <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button onClick={() => setRoleFilter("student")} className={`btn ${roleFilter === "student" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Students</button>
-                        <button onClick={() => setRoleFilter("lecturer")} className={`btn ${roleFilter === "lecturer" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Lecturers</button>
+                        <button onClick={() => setRoleFilter("student")} className={`btn ${roleFilter === "student" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Students</button>
+                        <button onClick={() => setRoleFilter("lecturer")} className={`btn ${roleFilter === "lecturer" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Lecturers</button>
                     </div>
                 </div>
 
                 {/* Temporary Password Banner */}
                 {createdTempPassword && (
-                    <div className="alert alert-success" style={{ background: "rgba(46, 204, 113, 0.2)", border: "1px solid var(--success)", padding: "1.2rem", borderRadius: "8px", marginBottom: "1.5rem", position: "relative" }}>
-                        <h4 style={{ color: "#2ecc71", margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem" }}>
-                            🔑 Temporary Password Generated
+                    <div className="alert alert-success animate-fade-in" style={{ padding: "1.2rem", borderRadius: "12px", marginBottom: "1.5rem", position: "relative" }}>
+                        <h4 style={{ color: "var(--success)", margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem" }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "16px", height: "16px" }}>
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            Temporary Password Generated
                         </h4>
-                        <p style={{ margin: "0 0 0.8rem 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                        <p style={{ margin: "0 0 0.8rem 0", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: "1.4" }}>
                             Copy the password below. The user is required to change this upon their first login to gain access.
                         </p>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(0,0,0,0.3)", padding: "0.5rem 0.8rem", borderRadius: "6px", border: "1px solid var(--border-color)", width: "fit-content" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(0,0,0,0.3)", padding: "0.5rem 0.8rem", borderRadius: "8px", border: "1px solid var(--border-color)", width: "fit-content" }}>
                             <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: "bold", color: "#fff", letterSpacing: "1px" }}>{createdTempPassword}</span>
                             <button 
                                 onClick={() => {
                                     navigator.clipboard.writeText(createdTempPassword);
                                     alert("Password copied to clipboard!");
                                 }} 
-                                className="btn btn-outline" 
-                                style={{ padding: "0.2rem 0.4rem", fontSize: "0.75rem" }}
+                                className="btn btn-outline btn-sm" 
+                                style={{ padding: "0.2rem 0.5rem" }}
                             >
                                 Copy
                             </button>
                         </div>
                         <button 
                             onClick={() => setCreatedTempPassword("")} 
-                            style={{ position: "absolute", top: "0.8rem", right: "0.8rem", background: "none", border: "none", color: "#fff", fontSize: "1.1rem", cursor: "pointer" }}
+                            style={{ position: "absolute", top: "0.8rem", right: "0.8rem", background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.1rem", cursor: "pointer" }}
                         >
                             ✕
                         </button>
@@ -196,11 +212,34 @@ const UsersPanel = ({ departments }) => {
                 )}
 
                 <div style={{ marginBottom: "1.5rem" }}>
-                    <input type="text" className="form-input" placeholder="🔍 Search users by name, email, or registration ID..." value={search} onChange={e => setSearch(e.target.value)} />
+                    <div className="input-with-icon">
+                        <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" className="form-input" placeholder="Search users by name, email, or registration ID..." value={search} onChange={e => setSearch(e.target.value)} />
+                    </div>
                 </div>
 
-                {loading ? <p>Loading users...</p> : users.length === 0 ? <p style={{ color: "var(--text-muted)" }}>No accounts found.</p> : (
-                    <div className="table-responsive">
+                {loading ? (
+                    <div className="loading-spinner" style={{ padding: "2rem" }}>
+                        <div className="spinner"></div>
+                        <p className="loading-text">Loading registry records...</p>
+                    </div>
+                ) : users.length === 0 ? (
+                    <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                        <div className="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <div className="empty-state-title">No accounts found</div>
+                        <div className="empty-state-text">No registry records match your query.</div>
+                    </div>
+                ) : (
+                    <div className="table-responsive" style={{ flex: 1 }}>
                         <table className="premium-table">
                             <thead>
                                 <tr>
@@ -215,54 +254,59 @@ const UsersPanel = ({ departments }) => {
                             <tbody>
                                 {users.map(u => (
                                     <tr key={u._id}>
-                                        <td>{u.registrationNumber || (u.role === "student" ? u.studentId : u.lecturerId) || "N/A"}</td>
+                                        <td><strong>{u.registrationNumber || (u.role === "student" ? u.studentId : u.lecturerId) || "N/A"}</strong></td>
                                         <td>{u.name}</td>
                                         <td>{u.email}</td>
-                                        <td>{u.department || u.departmentId?.code || "None"}</td>
                                         <td>
-                                            <span 
-                                                className="badge" 
-                                                style={{ 
-                                                    display: "inline-block", 
-                                                    padding: "0.2rem 0.5rem", 
-                                                    borderRadius: "4px", 
-                                                    fontSize: "0.7rem", 
-                                                    fontWeight: "600",
-                                                    background: u.isActive !== false ? "rgba(46, 204, 113, 0.15)" : "rgba(231, 76, 60, 0.15)", 
-                                                    color: u.isActive !== false ? "#2ecc71" : "#e74c3c", 
-                                                    border: u.isActive !== false ? "1px solid rgba(46, 204, 113, 0.3)" : "1px solid rgba(231, 76, 60, 0.3)"
-                                                }}
-                                            >
+                                            {u.department || u.departmentId?.code ? (
+                                                <span className="badge badge-student" style={{ fontSize: "0.7rem", fontWeight: "700" }}>{u.department || u.departmentId?.code}</span>
+                                            ) : "None"}
+                                        </td>
+                                        <td>
+                                            <span className={`badge badge-${u.isActive !== false ? "success" : "danger"}`} style={{ fontSize: "0.7rem", fontWeight: "700" }}>
                                                 {u.isActive !== false ? "Active" : "Suspended"}
                                             </span>
                                         </td>
                                         <td>
-                                            <div style={{ display: "flex", gap: "0.3rem" }}>
+                                            <div style={{ display: "flex", gap: "0.4rem" }}>
                                                 <button 
                                                     onClick={() => handleToggleStatus(u._id, u.isActive !== false)} 
-                                                    className="btn btn-outline" 
-                                                    style={{ 
-                                                        padding: "0.25rem 0.4rem", 
-                                                        fontSize: "0.7rem", 
-                                                        borderColor: u.isActive !== false ? "#e74c3c" : "#2ecc71", 
-                                                        color: u.isActive !== false ? "#e74c3c" : "#2ecc71" 
-                                                    }}
+                                                    className="btn-icon" 
+                                                    title={u.isActive !== false ? "Suspend Account" : "Activate Account"}
+                                                    style={{ color: u.isActive !== false ? "var(--error)" : "var(--success)", background: "rgba(255,255,255,0.02)" }}
                                                 >
-                                                    {u.isActive !== false ? "Suspend" : "Activate"}
+                                                    {u.isActive !== false ? (
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <circle cx="12" cy="12" r="10"/>
+                                                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                                        </svg>
+                                                    ) : (
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <polyline points="20 6 9 17 4 12"/>
+                                                        </svg>
+                                                    )}
                                                 </button>
                                                 <button 
                                                     onClick={() => handleResetPassword(u._id, u.email)} 
-                                                    className="btn btn-outline" 
-                                                    style={{ padding: "0.25rem 0.4rem", fontSize: "0.7rem" }}
+                                                    className="btn-icon"
+                                                    title="Reset Password"
+                                                    style={{ color: "var(--primary-400)", background: "rgba(255,255,255,0.02)" }}
                                                 >
-                                                    Reset
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                                    </svg>
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteUser(u._id)} 
-                                                    className="btn btn-danger" 
-                                                    style={{ padding: "0.25rem 0.4rem", fontSize: "0.7rem" }}
+                                                    className="btn-icon"
+                                                    title="Delete Account"
+                                                    style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
                                                 >
-                                                    Delete
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <polyline points="3 6 5 6 21 6"/>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </td>
@@ -274,10 +318,10 @@ const UsersPanel = ({ departments }) => {
                 )}
             </div>
 
-            <div className="glass-card">
+            <div className="glass-card-static" style={{ height: "fit-content" }}>
                 <h3>Create User Account</h3>
-                {error && <div className="alert alert-danger">{error}</div>}
-                <form onSubmit={handleCreateUser} style={{ marginTop: "1rem" }}>
+                {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
+                <form onSubmit={handleCreateUser} style={{ marginTop: "1.25rem" }}>
                     <div className="form-group">
                         <label>Full Name</label>
                         <input type="text" className="form-input" placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} required />
@@ -299,7 +343,7 @@ const UsersPanel = ({ departments }) => {
                     </div>
                     <div className="form-group">
                         <label>Role</label>
-                        <select className="form-input" value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                        <select className="form-input" value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--background-dark)" }}>
                             <option value="student">Student</option>
                             <option value="lecturer">Lecturer</option>
                             <option value="admin">Admin</option>
@@ -308,7 +352,7 @@ const UsersPanel = ({ departments }) => {
 
                     <div className="form-group">
                         <label>Department (Optional)</label>
-                        <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                        <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)} style={{ background: "var(--background-dark)" }}>
                             <option value="">None</option>
                             {departments.map(d => (
                                 <option key={d._id} value={d.name}>{d.code} - {d.name}</option>
@@ -317,13 +361,13 @@ const UsersPanel = ({ departments }) => {
                     </div>
 
                     {role === "lecturer" && (
-                        <div className="form-group">
+                        <div className="form-group animate-slide-down">
                             <label>Specialization Field</label>
                             <input type="text" className="form-input" placeholder="e.g. Theoretical Physics" value={specialization} onChange={e => setSpecialization(e.target.value)} />
                         </div>
                     )}
 
-                    <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem" }}>Create Account</button>
+                    <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>Create Account</button>
                 </form>
             </div>
         </div>
@@ -347,7 +391,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
     const [lecturerId, setLecturerId] = useState("");
     const [error, setError] = useState(null);
 
-    const fetchCourses = async () => {
+    const fetchCourses = useCallback(async () => {
         setLoading(true);
         try {
             const res = await api.get("/courses");
@@ -357,11 +401,14 @@ const CoursesPanel = ({ departments, lecturers }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchCourses();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchCourses();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchCourses]);
 
     const handleCreateCourse = async (e) => {
         e.preventDefault();
@@ -387,6 +434,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
             await api.delete(`/courses/${cId}`);
             fetchCourses();
         } catch (err) {
+            console.error(err);
             alert("Delete failed");
         }
     };
@@ -402,11 +450,26 @@ const CoursesPanel = ({ departments, lecturers }) => {
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
-            <div className="glass-card">
+        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+            <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <h3>Course Catalog Registry</h3>
-                {loading ? <p>Loading catalog...</p> : courses.length === 0 ? <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No courses registered.</p> : (
-                    <div className="table-responsive" style={{ marginTop: "1rem" }}>
+                {loading ? (
+                    <div className="loading-spinner" style={{ padding: "2rem" }}>
+                        <div className="spinner"></div>
+                        <p className="loading-text">Loading catalog records...</p>
+                    </div>
+                ) : courses.length === 0 ? (
+                    <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                        <div className="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                            </svg>
+                        </div>
+                        <div className="empty-state-title">No courses registered</div>
+                        <div className="empty-state-text">No catalog logs present. Create a new course to start.</div>
+                    </div>
+                ) : (
+                    <div className="table-responsive" style={{ flex: 1, marginTop: "1rem" }}>
                         <table className="premium-table">
                             <thead>
                                 <tr>
@@ -420,14 +483,15 @@ const CoursesPanel = ({ departments, lecturers }) => {
                             <tbody>
                                 {courses.map(c => (
                                     <tr key={c._id}>
-                                        <td><strong>{c.code}</strong></td>
+                                        <td><span className="badge badge-student" style={{ fontSize: "0.75rem", fontWeight: "700" }}>{c.code}</span></td>
                                         <td>{c.name}</td>
                                         <td>{c.departmentId?.code}</td>
                                         <td>
                                             <select 
                                                 value={c.lecturerId?._id || ""} 
                                                 onChange={e => handleAssignLecturer(c._id, e.target.value)}
-                                                style={{ background: "var(--bg-dark)", color: "var(--text-main)", border: "1px solid var(--border-color)", padding: "0.2rem", borderRadius: "4px" }}
+                                                className="form-input"
+                                                style={{ background: "var(--background-dark)", color: "var(--text-main)", border: "1px solid var(--border-color)", padding: "0.3rem 0.5rem", borderRadius: "6px", fontSize: "0.8rem" }}
                                             >
                                                 <option value="">Unassigned</option>
                                                 {lecturers.map(l => (
@@ -436,7 +500,17 @@ const CoursesPanel = ({ departments, lecturers }) => {
                                             </select>
                                         </td>
                                         <td>
-                                            <button onClick={() => handleDeleteCourse(c._id)} className="btn btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>Delete</button>
+                                            <button 
+                                                onClick={() => handleDeleteCourse(c._id)} 
+                                                className="btn-icon" 
+                                                title="Delete Course"
+                                                style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -446,10 +520,10 @@ const CoursesPanel = ({ departments, lecturers }) => {
                 )}
             </div>
 
-            <div className="glass-card">
+            <div className="glass-card-static" style={{ height: "fit-content" }}>
                 <h3>Create New Course Section</h3>
-                {error && <div className="alert alert-danger">{error}</div>}
-                <form onSubmit={handleCreateCourse} style={{ marginTop: "1rem" }}>
+                {error && <div className="alert alert-danger animate-fade-in" style={{ marginTop: "1rem" }}>{error}</div>}
+                <form onSubmit={handleCreateCourse} style={{ marginTop: "1.25rem" }}>
                     <div className="form-group">
                         <label>Course Code</label>
                         <input type="text" className="form-input" placeholder="e.g. COMP303" value={code} onChange={e => setCode(e.target.value)} required />
@@ -476,7 +550,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
 
                     <div className="form-group">
                         <label>Department</label>
-                        <select className="form-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} style={{ background: "var(--bg-dark)" }} required>
+                        <select className="form-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} style={{ background: "var(--background-dark)" }} required>
                             <option value="">Select Department</option>
                             {departments.map(d => (
                                 <option key={d._id} value={d._id}>{d.code} - {d.name}</option>
@@ -486,7 +560,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
 
                     <div className="form-group">
                         <label>Assign Initial Lecturer (Optional)</label>
-                        <select className="form-input" value={lecturerId} onChange={e => setLecturerId(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                        <select className="form-input" value={lecturerId} onChange={e => setLecturerId(e.target.value)} style={{ background: "var(--background-dark)" }}>
                             <option value="">Unassigned</option>
                             {lecturers.map(l => (
                                 <option key={l._id} value={l._id}>{l.name}</option>
@@ -494,7 +568,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
                         </select>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem" }}>Create Course</button>
+                    <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1.5rem", justifyContent: "center" }}>Create Course</button>
                 </form>
             </div>
         </div>
@@ -508,7 +582,7 @@ const EnrollmentsPanel = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchRequests = async () => {
+    const fetchRequests = useCallback(async () => {
         setLoading(true);
         try {
             const res = await api.get("/enrollments?status=pending");
@@ -518,11 +592,14 @@ const EnrollmentsPanel = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchRequests();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchRequests();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchRequests]);
 
     const handleApproval = async (id, approve) => {
         try {
@@ -535,14 +612,30 @@ const EnrollmentsPanel = () => {
             }
             fetchRequests();
         } catch (err) {
+            console.error(err);
             alert("Action failed");
         }
     };
 
     return (
-        <div className="glass-card">
+        <div className="glass-card-static animate-slide-up stagger-2">
             <h3>Pending Enrollment Requests</h3>
-            {loading ? <p>Loading requests...</p> : requests.length === 0 ? <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No pending enrollment approvals needed. 🍃</p> : (
+            {loading ? (
+                <div className="loading-spinner" style={{ padding: "2rem" }}>
+                    <div className="spinner"></div>
+                    <p className="loading-text">Loading enrollment approvals...</p>
+                </div>
+            ) : requests.length === 0 ? (
+                <div className="empty-state" style={{ padding: "4rem 2rem" }}>
+                    <div className="empty-state-icon" style={{ color: "var(--success)" }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <div className="empty-state-title">All caught up!</div>
+                    <div className="empty-state-text">No pending enrollment requests require approval.</div>
+                </div>
+            ) : (
                 <div className="table-responsive" style={{ marginTop: "1.5rem" }}>
                     <table className="premium-table">
                         <thead>
@@ -558,15 +651,34 @@ const EnrollmentsPanel = () => {
                         <tbody>
                             {requests.map(r => (
                                 <tr key={r._id}>
-                                    <td>{r.studentId?.studentId}</td>
+                                    <td><strong>{r.studentId?.studentId}</strong></td>
                                     <td>{r.studentId?.name}</td>
-                                    <td><strong>{r.courseId?.code}</strong></td>
+                                    <td><span className="badge badge-student" style={{ fontSize: "0.75rem", fontWeight: "700" }}>{r.courseId?.code}</span></td>
                                     <td>{r.courseId?.name}</td>
                                     <td>{r.semester}</td>
                                     <td>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button onClick={() => handleApproval(r._id, true)} className="btn btn-primary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Approve</button>
-                                            <button onClick={() => handleApproval(r._id, false)} className="btn btn-danger" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>Reject</button>
+                                            <button 
+                                                onClick={() => handleApproval(r._id, true)} 
+                                                className="btn btn-primary btn-sm" 
+                                                style={{ padding: "0.4rem 0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "12px", height: "12px" }}>
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                                <span>Approve</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => handleApproval(r._id, false)} 
+                                                className="btn btn-danger btn-sm" 
+                                                style={{ padding: "0.4rem 0.8rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "12px", height: "12px" }}>
+                                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                                </svg>
+                                                <span>Reject</span>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -625,18 +737,31 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
             await api.delete(`/users/departments/${id}`);
             onReload();
         } catch (err) {
+            console.error(err);
             alert("Delete failed");
         }
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
+        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
             
             {/* List and CRUD forms */}
-            <div className="glass-card">
+            <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <h3>Departments & Academic Units</h3>
-                {departments.length === 0 ? <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>No departments created.</p> : (
-                    <div className="table-responsive" style={{ marginTop: "1.5rem" }}>
+                {departments.length === 0 ? (
+                    <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                        <div className="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                                <line x1="9" y1="22" x2="9" y2="16"/>
+                                <line x1="15" y1="22" x2="15" y2="16"/>
+                            </svg>
+                        </div>
+                        <div className="empty-state-title">No departments created</div>
+                        <div className="empty-state-text">Registry contains no academic departments.</div>
+                    </div>
+                ) : (
+                    <div className="table-responsive" style={{ flex: 1, marginTop: "1.5rem" }}>
                         <table className="premium-table">
                             <thead>
                                 <tr>
@@ -649,11 +774,21 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
                             <tbody>
                                 {departments.map(d => (
                                     <tr key={d._id}>
-                                        <td><strong>{d.code}</strong></td>
+                                        <td><span className="badge badge-student" style={{ fontSize: "0.75rem", fontWeight: "700" }}>{d.code}</span></td>
                                         <td>{d.name}</td>
                                         <td>{d.facultyId?.name}</td>
                                         <td>
-                                            <button onClick={() => handleDeleteDept(d._id)} className="btn btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>Delete</button>
+                                            <button 
+                                                onClick={() => handleDeleteDept(d._id)} 
+                                                className="btn-icon" 
+                                                title="Delete Department"
+                                                style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -665,7 +800,7 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                 {/* Faculty creator */}
-                <div className="glass-card">
+                <div className="glass-card-static">
                     <h4>Create Faculty Unit</h4>
                     <form onSubmit={handleCreateFaculty} style={{ marginTop: "1rem" }}>
                         <div className="form-group">
@@ -676,12 +811,12 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
                             <label>Description</label>
                             <input type="text" className="form-input" placeholder="General description..." value={fDesc} onChange={e => setFDesc(e.target.value)} />
                         </div>
-                        <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "0.5rem" }}>Create Faculty</button>
+                        <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem", justifyContent: "center" }}>Create Faculty</button>
                     </form>
                 </div>
 
                 {/* Department Creator */}
-                <div className="glass-card">
+                <div className="glass-card-static">
                     <h4>Create Department Unit</h4>
                     <form onSubmit={handleCreateDepartment} style={{ marginTop: "1rem" }}>
                         <div className="form-group">
@@ -694,14 +829,14 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
                         </div>
                         <div className="form-group">
                             <label>Faculty Parent</label>
-                            <select className="form-input" value={facultyId} onChange={e => setFacultyId(e.target.value)} style={{ background: "var(--bg-dark)" }} required>
+                            <select className="form-input" value={facultyId} onChange={e => setFacultyId(e.target.value)} style={{ background: "var(--background-dark)" }} required>
                                 <option value="">Select Faculty</option>
                                 {faculties.map(f => (
                                     <option key={f._id} value={f._id}>{f.name}</option>
                                 ))}
                             </select>
                         </div>
-                        <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "0.5rem" }}>Create Department</button>
+                        <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem", justifyContent: "center" }}>Create Department</button>
                     </form>
                 </div>
             </div>
@@ -730,31 +865,59 @@ const AuditLogsPanel = () => {
         fetchLogs();
     }, []);
 
-    if (loading) return <p>Loading audit trails...</p>;
+    if (loading) {
+        return (
+            <div className="loading-spinner" style={{ minHeight: "30vh" }}>
+                <div className="spinner"></div>
+                <p className="loading-text">Loading audit trails...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="glass-card">
+        <div className="glass-card-static animate-slide-up stagger-2">
             <h3>System Activity Audit Trails</h3>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+            <p className="page-subtitle" style={{ fontSize: "0.9rem", marginBottom: "2rem" }}>
                 Displays chronological records of user authentication actions, enrollment changes, course catalog CRUDs, and security events.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {logs.length === 0 ? <p style={{ color: "var(--text-muted)" }}>No logs recorded yet.</p> : logs.map(log => (
-                    <div key={log._id} style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "0.8rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                            <span className="badge" style={{ background: "rgba(255,255,255,0.05)", marginRight: "1rem" }}>{log.action}</span>
-                            <span>{log.details}</span>
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
-                                Performed By: {log.performerId?.name || "System"} ({log.performerId?.role || "System"}) • IP Address: {log.ipAddress}
+            {logs.length === 0 ? (
+                <div className="empty-state" style={{ padding: "3rem 1rem" }}>
+                    <div className="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div className="empty-state-title">No audit logs</div>
+                    <div className="empty-state-text">No security audit logs have been recorded.</div>
+                </div>
+            ) : (
+                <div className="timeline" style={{ display: "flex", flexDirection: "column", gap: "1.2rem", position: "relative", paddingLeft: "1.5rem", borderLeft: "2px solid rgba(255,255,255,0.06)", marginLeft: "0.5rem" }}>
+                    {logs.map(log => (
+                        <div key={log._id} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                            {/* Timeline Dot */}
+                            <div style={{ position: "absolute", left: "-29px", top: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "var(--role-accent)", border: "2px solid var(--background-dark)" }}></div>
+                            
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", color: "var(--text-main)", fontSize: "0.7rem", textTransform: "uppercase", fontWeight: "600", padding: "0.2rem 0.5rem" }}>
+                                    {log.action}
+                                </span>
+                                <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                                    {new Date(log.createdAt).toLocaleString()}
+                                </span>
+                            </div>
+                            <div style={{ fontSize: "0.85rem", color: "var(--text-main)", marginTop: "0.1rem" }}>{log.details}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+                                <span>Performed By: <strong style={{ color: "var(--text-main)" }}>{log.performerId?.name || "System"}</strong> ({log.performerId?.role || "System"})</span>
+                                <span style={{ opacity: 0.5 }}>•</span>
+                                <span>IP Address: {log.ipAddress}</span>
                             </div>
                         </div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                            {new Date(log.createdAt).toLocaleString()}
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

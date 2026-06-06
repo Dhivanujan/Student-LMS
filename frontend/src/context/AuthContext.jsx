@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useEffect } from "react";
 import api from "../services/api";
 
 export const AuthContext = createContext();
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Login Context Error:", error);
             const message = error.response?.data?.message || "Login failed. Please try again.";
-            throw new Error(message);
+            throw new Error(message, { cause: error });
         }
     };
 
@@ -78,7 +79,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Update Profile Error:", error);
             const message = error.response?.data?.message || "Failed to update profile.";
-            throw new Error(message);
+            throw new Error(message, { cause: error });
         }
     };
 
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Change Password Error:", error);
             const message = error.response?.data?.message || "Failed to change password.";
-            throw new Error(message);
+            throw new Error(message, { cause: error });
         }
     };
 

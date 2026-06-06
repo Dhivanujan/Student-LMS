@@ -2,7 +2,7 @@
 // APP ENTRY COMPONENT - Routing & Core Structure
 // ============================================
 
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
@@ -32,9 +32,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (loading) {
         return (
             <div className="flex-center" style={{ minHeight: "80vh" }}>
-                <div className="glass-card text-center">
-                    <h2>Loading Session...</h2>
-                    <p style={{ marginTop: "1rem" }}>Please wait while we secure your connection.</p>
+                <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p className="loading-text">Securing your session...</p>
                 </div>
             </div>
         );
@@ -69,7 +69,7 @@ const AppContent = () => {
                         </Routes>
                     </main>
                 ) : (
-                    <div className="app-container">
+                    <div className="app-container" data-role={user?.role || ''}>
                         <Sidebar />
                         <main className="main-content">
                             <Routes>

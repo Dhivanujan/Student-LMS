@@ -2,7 +2,7 @@
 // LOGIN PAGE COMPONENT
 // ============================================
 
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
@@ -37,53 +37,118 @@ const Login = () => {
     };
 
     return (
-        <div className="container flex-center" style={{ minHeight: "85vh" }}>
-            <div className="glass-card form-container">
-                <h2 className="text-center" style={{ marginBottom: "0.5rem", fontSize: "1.8rem" }}>
-                    Welcome Back
-                </h2>
-                <p className="text-center" style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "2.2rem" }}>
-                    Sign in to manage your student courses
-                </p>
+        <div className="auth-layout">
+            <div className="auth-brand-panel">
+                <div className="auth-brand-content">
+                    <div className="auth-brand-logo">
+                        EduNex<span className="logo-dot">.</span>
+                    </div>
+                    <p className="auth-brand-tagline">
+                        Your Premium Learning Experience
+                    </p>
+                    <div className="auth-features">
+                        <div className="auth-feature">
+                            <div className="auth-feature-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                                </svg>
+                            </div>
+                            <span className="auth-feature-text">Interactive course materials and assignments</span>
+                        </div>
+                        <div className="auth-feature">
+                            <div className="auth-feature-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"/>
+                                    <line x1="12" y1="20" x2="12" y2="4"/>
+                                    <line x1="6" y1="20" x2="6" y2="14"/>
+                                </svg>
+                            </div>
+                            <span className="auth-feature-text">Real-time progress tracking and analytics</span>
+                        </div>
+                        <div className="auth-feature">
+                            <div className="auth-feature-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <span className="auth-feature-text">Collaborative forums and discussions</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                {error && <div className="alert alert-danger">{error}</div>}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Email Address</label>
-                        <input
-                            type="email"
-                            id="email"
-                            className="form-input"
-                            placeholder="john@school.edu"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
+            <div className="auth-form-panel">
+                <div className="auth-form-card">
+                    <div className="auth-form-header">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to continue learning</p>
                     </div>
 
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="form-input"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                    {error && <div className="alert alert-danger animate-fade-in">{error}</div>}
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email">Email Address</label>
+                            <div className="input-with-icon">
+                                <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    className="form-input"
+                                    placeholder="john@school.edu"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: "1.5rem" }}>
+                            <label htmlFor="password">Password</label>
+                            <div className="input-with-icon">
+                                <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    className="form-input"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            disabled={submitting} 
+                            className="btn btn-primary btn-lg" 
+                            style={{ width: "100%" }}
+                        >
+                            {submitting ? (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                                    <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
+                                    <span>Signing in...</span>
+                                </div>
+                            ) : "Login"}
+                        </button>
+                    </form>
+
+                    <div className="auth-form-footer" style={{ marginTop: "1.5rem", textAlign: "center" }}>
+                        <Link to="/forgot-password" style={{ fontSize: "0.85rem", color: "var(--primary-400)" }}>
+                            Forgot password?
+                        </Link>
                     </div>
-
-                    <button 
-                        type="submit" 
-                        disabled={submitting} 
-                        className="btn btn-primary" 
-                        style={{ width: "100%", marginTop: "1rem" }}
-                    >
-                        {submitting ? "Signing in..." : "Login"}
-                    </button>
-                </form>
-
-
+                </div>
             </div>
         </div>
     );

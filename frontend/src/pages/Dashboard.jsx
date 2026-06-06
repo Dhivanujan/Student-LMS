@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import StudentDashboard from "../components/RoleDashboards/StudentDashboard";
 import LecturerDashboard from "../components/RoleDashboards/LecturerDashboard";

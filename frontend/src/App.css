@@ -1,1 +1,9 @@
-/* App.css is deliberately left empty. Styling is managed in index.css. */
+/* App.css — Role-based theme overrides applied via data-role attribute on .app-container */
+
+/* These are applied via the data-role attribute set in App.jsx */
+/* Role-specific CSS variable overrides are defined in index.css :root and [data-role] selectors */
+
+#root {
+    width: 100%;
+    min-height: 100vh;
+}
