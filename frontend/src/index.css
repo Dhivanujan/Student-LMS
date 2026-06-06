@@ -12,75 +12,75 @@
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-    /* ── Color Palette ─────────────────────────────── */
+    /* ── Color Palette — Green Theme ─────────────────────────────── */
     /* Backgrounds */
-    --bg-dark: hsl(222, 47%, 7%);
+    --bg-dark: #F1F5F9;
     --background-dark: var(--bg-dark);
-    --bg-surface: hsl(222, 47%, 10%);
-    --bg-card: hsla(225, 44%, 14%, 0.65);
-    --bg-card-hover: hsla(225, 44%, 18%, 0.85);
-    --bg-card-solid: hsl(225, 44%, 14%);
-    --bg-elevated: hsla(225, 40%, 20%, 0.7);
-    --bg-input: hsla(225, 40%, 8%, 0.6);
-    --bg-input-focus: hsla(225, 40%, 6%, 0.8);
+    --bg-surface: #FFFFFF;
+    --bg-card: rgba(255, 255, 255, 0.75);
+    --bg-card-hover: rgba(255, 255, 255, 0.92);
+    --bg-card-solid: #FFFFFF;
+    --bg-elevated: rgba(255, 255, 255, 0.95);
+    --bg-input: rgba(255, 255, 255, 0.95);
+    --bg-input-focus: #FFFFFF;
 
-    /* Primary — Indigo/Violet */
-    --primary-50: #eef2ff;
-    --primary-100: #e0e7ff;
-    --primary-200: #c7d2fe;
-    --primary-300: #a5b4fc;
-    --primary-400: #818cf8;
-    --primary: #7c3aed;
-    --primary-600: #6d28d9;
-    --primary-700: #5b21b6;
-    --primary-800: #4c1d95;
-    --primary-900: #3b0f7a;
-    --primary-glow: hsla(263, 85%, 63%, 0.25);
-    --primary-glow-strong: hsla(263, 85%, 63%, 0.45);
+    /* Primary — Deep Green (#166534) */
+    --primary-50: #f0fdf4;
+    --primary-100: #dcfce7;
+    --primary-200: #bbf7d0;
+    --primary-300: #86efac;
+    --primary-400: #4ade80;
+    --primary: #166534;
+    --primary-600: #15803d;
+    --primary-700: #166534;
+    --primary-800: #14532d;
+    --primary-900: #0f2d1e;
+    --primary-glow: rgba(22, 101, 52, 0.12);
+    --primary-glow-strong: rgba(22, 101, 52, 0.25);
 
-    /* Secondary — Blue */
-    --secondary: hsl(220, 95%, 60%);
-    --secondary-glow: hsla(220, 95%, 60%, 0.25);
+    /* Secondary — Fresh Green (#22C55E) */
+    --secondary: #22C55E;
+    --secondary-glow: rgba(34, 197, 94, 0.15);
 
-    /* Accent — Cyan */
-    --accent: hsl(187, 85%, 53%);
-    --accent-glow: hsla(187, 85%, 53%, 0.2);
+    /* Accent — Lime Highlight (#84CC16) */
+    --accent: #84CC16;
+    --accent-glow: rgba(132, 204, 22, 0.2);
 
     /* Status Colors */
-    --success: #10b981;
-    --success-light: rgba(16, 185, 129, 0.12);
-    --success-border: rgba(16, 185, 129, 0.25);
-    --warning: #f59e0b;
-    --warning-light: rgba(245, 158, 11, 0.12);
-    --warning-border: rgba(245, 158, 11, 0.25);
-    --error: #f43f5e;
-    --error-light: rgba(244, 63, 94, 0.12);
-    --error-border: rgba(244, 63, 94, 0.25);
-    --info: #0ea5e9;
-    --info-light: rgba(14, 165, 233, 0.12);
-    --info-border: rgba(14, 165, 233, 0.25);
+    --success: #22c55e;
+    --success-light: rgba(34, 197, 94, 0.1);
+    --success-border: rgba(34, 197, 94, 0.2);
+    --warning: #eab308;
+    --warning-light: rgba(234, 179, 8, 0.1);
+    --warning-border: rgba(234, 179, 8, 0.2);
+    --error: #ef4444;
+    --error-light: rgba(239, 68, 68, 0.1);
+    --error-border: rgba(239, 68, 68, 0.2);
+    --info: #3b82f6;
+    --info-light: rgba(59, 130, 246, 0.1);
+    --info-border: rgba(59, 130, 246, 0.2);
 
-    /* Text */
-    --text-main: hsl(210, 40%, 98%);
-    --text-secondary: hsl(215, 25%, 82%);
-    --text-muted: hsl(215, 20%, 58%);
-    --text-dim: hsl(215, 15%, 42%);
-    --text-dark: hsl(222, 47%, 10%);
+    /* Text — Very Dark Green (#0B1F14) */
+    --text-main: #0B1F14;
+    --text-secondary: #1B3224;
+    --text-muted: #3D5446;
+    --text-dim: #6E8376;
+    --text-dark: #0B1F14;
 
     /* Borders */
-    --border-color: rgba(255, 255, 255, 0.06);
-    --border-subtle: rgba(255, 255, 255, 0.04);
-    --border-glow: rgba(255, 255, 255, 0.12);
-    --border-strong: rgba(255, 255, 255, 0.18);
+    --border-color: rgba(22, 101, 52, 0.08);
+    --border-subtle: rgba(22, 101, 52, 0.04);
+    --border-glow: rgba(34, 197, 94, 0.25);
+    --border-strong: rgba(22, 101, 52, 0.18);
 
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
-    --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --shadow-glow-primary: 0 0 20px var(--primary-glow), 0 8px 32px rgba(0,0,0,0.3);
-    --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.2);
+    /* Shadows (Optimized for Light Background) */
+    --shadow-sm: 0 2px 8px rgba(11, 31, 20, 0.04);
+    --shadow-md: 0 4px 16px rgba(11, 31, 20, 0.06);
+    --shadow-lg: 0 8px 32px rgba(11, 31, 20, 0.08);
+    --shadow-xl: 0 16px 48px rgba(11, 31, 20, 0.12);
+    --shadow-premium: 0 8px 32px 0 rgba(11, 31, 20, 0.06);
+    --shadow-glow-primary: 0 0 20px rgba(22, 101, 52, 0.08), 0 8px 32px rgba(11, 31, 20, 0.05);
+    --shadow-glow-success: 0 0 20px rgba(34, 197, 94, 0.08);
 
     /* Transitions */
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,19 +112,19 @@
     --z-notification: 700;
     --z-tooltip: 800;
 
-    /* Role Gradients */
-    --admin-gradient: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #818cf8 100%);
-    --admin-accent: #7c3aed;
-    --lecturer-gradient: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%);
-    --lecturer-accent: #0ea5e9;
-    --student-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
-    --student-accent: #8b5cf6;
+    /* Role Gradients — Harmonized Green Palette */
+    --admin-gradient: linear-gradient(135deg, #166534 0%, #15803d 50%, #22c55e 100%);
+    --admin-accent: #166534;
+    --lecturer-gradient: linear-gradient(135deg, #15803d 0%, #22c55e 50%, #84cc16 100%);
+    --lecturer-accent: #22c55e;
+    --student-gradient: linear-gradient(135deg, #166534 0%, #22c55e 50%, #84cc16 100%);
+    --student-accent: #84cc16;
 
-    /* Default role (overridden by [data-role]) */
+    /* Default role */
     --role-gradient: var(--admin-gradient);
     --role-accent: var(--primary);
 
-    /* Sidebar */
+    /* Sidebar & Navbar Layout */
     --sidebar-width: 272px;
     --sidebar-collapsed-width: 72px;
     --navbar-height: 68px;
@@ -259,9 +259,9 @@ html {
 body {
     background: var(--bg-dark);
     background-image:
-        radial-gradient(ellipse 80% 60% at 50% -10%, hsla(250, 55%, 22%, 0.5) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 85% 10%, hsla(220, 70%, 18%, 0.35) 0%, transparent 50%),
-        radial-gradient(ellipse 50% 30% at 10% 5%, hsla(280, 50%, 15%, 0.25) 0%, transparent 50%);
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(34, 197, 94, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 10%, rgba(132, 204, 22, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 30% at 10% 5%, rgba(22, 101, 52, 0.05) 0%, transparent 50%);
     background-attachment: fixed;
     color: var(--text-main);
     font-family: var(--font-body);
@@ -418,9 +418,9 @@ input, select, textarea {
     animation: slideUp 0.5s ease-out both;
 }
 
-/* Nested glass card (lighter) */
+/* Nested glass card (harmonized green transparency) */
 .glass-card-inner {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(22, 101, 52, 0.03);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     padding: 1.25rem;
@@ -739,7 +739,7 @@ textarea.form-input {
    ========================================================================== */
 
 .navbar {
-    background: rgba(8, 12, 28, 0.82);
+    background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--border-color);
@@ -1093,7 +1093,7 @@ textarea.form-input {
 
 .sidebar {
     width: var(--sidebar-width);
-    background: rgba(8, 12, 28, 0.6);
+    background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-right: 1px solid var(--border-color);
@@ -1942,9 +1942,9 @@ textarea.form-input {
     position: relative;
     overflow: hidden;
     background:
-        radial-gradient(ellipse at 20% 50%, hsla(263, 85%, 30%, 0.4) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, hsla(220, 95%, 25%, 0.35) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 80%, hsla(280, 60%, 20%, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 50%, rgba(34, 197, 94, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(132, 204, 22, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(22, 101, 52, 0.05) 0%, transparent 50%),
         var(--bg-dark);
 }
 
