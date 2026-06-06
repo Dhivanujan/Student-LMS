@@ -166,7 +166,7 @@ const UsersPanel = ({ departments }) => {
     };
 
     return (
-        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+        <div className="admin-grid-layout animate-slide-up stagger-2">
             <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                     <h3 style={{ margin: 0 }}>User Accounts Registry</h3>
@@ -455,7 +455,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
     };
 
     return (
-        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+        <div className="admin-grid-layout animate-slide-up stagger-2">
             <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <h3>Course Catalog Registry</h3>
                 {loading ? (
@@ -748,7 +748,7 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
     };
 
     return (
-        <div className="form-row animate-slide-up stagger-2" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
+        <div className="admin-grid-layout animate-slide-up stagger-2">
             
             {/* List and CRUD forms */}
             <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>

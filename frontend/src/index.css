@@ -15,6 +15,7 @@
     /* ── Color Palette ─────────────────────────────── */
     /* Backgrounds */
     --bg-dark: hsl(222, 47%, 7%);
+    --background-dark: var(--bg-dark);
     --bg-surface: hsl(222, 47%, 10%);
     --bg-card: hsla(225, 44%, 14%, 0.65);
     --bg-card-hover: hsla(225, 44%, 18%, 0.85);
@@ -703,6 +704,12 @@ input, select, textarea {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+}
+
+.admin-grid-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 2rem;
 }
 
 .form-container {
@@ -1594,6 +1601,7 @@ textarea.form-input {
 .table-responsive {
     overflow-x: auto;
     width: 100%;
+    min-width: 0;
     border-radius: var(--radius-md);
 }
 
@@ -2570,6 +2578,11 @@ textarea.form-input {
 
     .page-title {
         font-size: 1.7rem;
+    }
+
+    .admin-grid-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
     }
 
     .auth-layout {
