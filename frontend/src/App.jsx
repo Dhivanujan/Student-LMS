@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import CursorGlow from "./components/CursorGlow";
 
 // Import Pages
 import Login from "./pages/Login";
@@ -58,6 +59,7 @@ const AppContent = () => {
 
     return (
         <BrowserRouter>
+            <CursorGlow />
             {user && !user.firstLogin && <Navbar />}
             
             {user ? (
