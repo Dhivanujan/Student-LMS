@@ -342,13 +342,18 @@ const UsersPanel = ({ departments }) => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Role</label>
-                        <select className="form-input" value={role} onChange={e => setRole(e.target.value)} style={{ background: "var(--background-dark)" }}>
-                            <option value="student">Student</option>
-                            <option value="lecturer">Lecturer</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
+    <label>Role</label>
+
+    <select
+        className="form-input dark-select"
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+    >
+        <option value="student">Student</option>
+        <option value="lecturer">Lecturer</option>
+        <option value="admin">Admin</option>
+    </select>
+</div>
 
                     <div className="form-group">
                         <label>Department (Optional)</label>
