@@ -83,12 +83,7 @@ const Login = () => {
                     </button>
                 </form>
 
-                <p className="text-center" style={{ marginTop: "1.5rem", fontSize: "0.9rem", color: "var(--text-muted)" }}>
-                    Don't have an account?{" "}
-                    <Link to="/register" className="link-alt">
-                        Register here
-                    </Link>
-                </p>
+
             </div>
         </div>
     );

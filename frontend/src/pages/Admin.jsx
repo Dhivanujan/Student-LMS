@@ -67,11 +67,12 @@ const UsersPanel = ({ departments }) => {
     // Form states
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [registrationNumber, setRegistrationNumber] = useState("");
     const [role, setRole] = useState("student");
-    const [departmentId, setDepartmentId] = useState("");
+    const [department, setDepartment] = useState("");
     const [specialization, setSpecialization] = useState("");
     const [error, setError] = useState(null);
+    const [createdTempPassword, setCreatedTempPassword] = useState("");
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -92,18 +93,53 @@ const UsersPanel = ({ departments }) => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         setError(null);
-        if (!name || !email || !password) return setError("Please fill in required fields");
+        setCreatedTempPassword("");
+
+        if (!name || !email || !registrationNumber) {
+            return setError("Please fill in name, email, and registration number");
+        }
 
         try {
-            await api.post("/users", { name, email, password, role, departmentId, specialization });
-            alert("User account created successfully!");
+            const res = await api.post("/users", { 
+                name, 
+                email, 
+                role, 
+                department, 
+                registrationNumber, 
+                specialization 
+            });
+            setCreatedTempPassword(res.data.temporaryPassword);
             setName("");
             setEmail("");
-            setPassword("");
+            setRegistrationNumber("");
+            setDepartment("");
             setSpecialization("");
             fetchUsers();
         } catch (err) {
             setError(err.response?.data?.message || "Failed to create user");
+        }
+    };
+
+    const handleToggleStatus = async (uId, currentStatus) => {
+        try {
+            const res = await api.put(`/users/${uId}/toggle-status`, { isActive: !currentStatus });
+            alert(res.data.message || "User status updated successfully!");
+            fetchUsers();
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || "Failed to toggle status");
+        }
+    };
+
+    const handleResetPassword = async (uId, email) => {
+        if (!window.confirm(`Are you sure you want to reset the password for ${email}?`)) return;
+        try {
+            const res = await api.put(`/users/${uId}/reset-password`);
+            setCreatedTempPassword(res.data.temporaryPassword);
+            alert("Password reset completed! The new temporary password is shown in the banner above.");
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || "Failed to reset password");
         }
     };
 
@@ -128,8 +164,39 @@ const UsersPanel = ({ departments }) => {
                     </div>
                 </div>
 
+                {/* Temporary Password Banner */}
+                {createdTempPassword && (
+                    <div className="alert alert-success" style={{ background: "rgba(46, 204, 113, 0.2)", border: "1px solid var(--success)", padding: "1.2rem", borderRadius: "8px", marginBottom: "1.5rem", position: "relative" }}>
+                        <h4 style={{ color: "#2ecc71", margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem" }}>
+                            🔑 Temporary Password Generated
+                        </h4>
+                        <p style={{ margin: "0 0 0.8rem 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                            Copy the password below. The user is required to change this upon their first login to gain access.
+                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(0,0,0,0.3)", padding: "0.5rem 0.8rem", borderRadius: "6px", border: "1px solid var(--border-color)", width: "fit-content" }}>
+                            <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: "bold", color: "#fff", letterSpacing: "1px" }}>{createdTempPassword}</span>
+                            <button 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(createdTempPassword);
+                                    alert("Password copied to clipboard!");
+                                }} 
+                                className="btn btn-outline" 
+                                style={{ padding: "0.2rem 0.4rem", fontSize: "0.75rem" }}
+                            >
+                                Copy
+                            </button>
+                        </div>
+                        <button 
+                            onClick={() => setCreatedTempPassword("")} 
+                            style={{ position: "absolute", top: "0.8rem", right: "0.8rem", background: "none", border: "none", color: "#fff", fontSize: "1.1rem", cursor: "pointer" }}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 <div style={{ marginBottom: "1.5rem" }}>
-                    <input type="text" className="form-input" placeholder="🔍 Search users by name..." value={search} onChange={e => setSearch(e.target.value)} />
+                    <input type="text" className="form-input" placeholder="🔍 Search users by name, email, or registration ID..." value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
 
                 {loading ? <p>Loading users...</p> : users.length === 0 ? <p style={{ color: "var(--text-muted)" }}>No accounts found.</p> : (
@@ -141,18 +208,63 @@ const UsersPanel = ({ departments }) => {
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Department</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users.map(u => (
                                     <tr key={u._id}>
-                                        <td>{u.role === "student" ? u.studentId : u.lecturerId}</td>
+                                        <td>{u.registrationNumber || (u.role === "student" ? u.studentId : u.lecturerId) || "N/A"}</td>
                                         <td>{u.name}</td>
                                         <td>{u.email}</td>
-                                        <td>{u.departmentId?.code || "None"}</td>
+                                        <td>{u.department || u.departmentId?.code || "None"}</td>
                                         <td>
-                                            <button onClick={() => handleDeleteUser(u._id)} className="btn btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>Delete</button>
+                                            <span 
+                                                className="badge" 
+                                                style={{ 
+                                                    display: "inline-block", 
+                                                    padding: "0.2rem 0.5rem", 
+                                                    borderRadius: "4px", 
+                                                    fontSize: "0.7rem", 
+                                                    fontWeight: "600",
+                                                    background: u.isActive !== false ? "rgba(46, 204, 113, 0.15)" : "rgba(231, 76, 60, 0.15)", 
+                                                    color: u.isActive !== false ? "#2ecc71" : "#e74c3c", 
+                                                    border: u.isActive !== false ? "1px solid rgba(46, 204, 113, 0.3)" : "1px solid rgba(231, 76, 60, 0.3)"
+                                                }}
+                                            >
+                                                {u.isActive !== false ? "Active" : "Suspended"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: "flex", gap: "0.3rem" }}>
+                                                <button 
+                                                    onClick={() => handleToggleStatus(u._id, u.isActive !== false)} 
+                                                    className="btn btn-outline" 
+                                                    style={{ 
+                                                        padding: "0.25rem 0.4rem", 
+                                                        fontSize: "0.7rem", 
+                                                        borderColor: u.isActive !== false ? "#e74c3c" : "#2ecc71", 
+                                                        color: u.isActive !== false ? "#e74c3c" : "#2ecc71" 
+                                                    }}
+                                                >
+                                                    {u.isActive !== false ? "Suspend" : "Activate"}
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleResetPassword(u._id, u.email)} 
+                                                    className="btn btn-outline" 
+                                                    style={{ padding: "0.25rem 0.4rem", fontSize: "0.7rem" }}
+                                                >
+                                                    Reset
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteUser(u._id)} 
+                                                    className="btn btn-danger" 
+                                                    style={{ padding: "0.25rem 0.4rem", fontSize: "0.7rem" }}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -163,7 +275,7 @@ const UsersPanel = ({ departments }) => {
             </div>
 
             <div className="glass-card">
-                <h3>Add User Account</h3>
+                <h3>Create User Account</h3>
                 {error && <div className="alert alert-danger">{error}</div>}
                 <form onSubmit={handleCreateUser} style={{ marginTop: "1rem" }}>
                     <div className="form-group">
@@ -175,8 +287,15 @@ const UsersPanel = ({ departments }) => {
                         <input type="email" className="form-input" placeholder="john@uni.edu" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                     <div className="form-group">
-                        <label>Login Password</label>
-                        <input type="password" className="form-input" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+                        <label>Registration / Employee ID</label>
+                        <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. STU-2026-004 or LEC-992" 
+                            value={registrationNumber} 
+                            onChange={e => setRegistrationNumber(e.target.value)} 
+                            required 
+                        />
                     </div>
                     <div className="form-group">
                         <label>Role</label>
@@ -189,10 +308,10 @@ const UsersPanel = ({ departments }) => {
 
                     <div className="form-group">
                         <label>Department (Optional)</label>
-                        <select className="form-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} style={{ background: "var(--bg-dark)" }}>
+                        <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)} style={{ background: "var(--bg-dark)" }}>
                             <option value="">None</option>
                             {departments.map(d => (
-                                <option key={d._id} value={d._id}>{d.code} - {d.name}</option>
+                                <option key={d._id} value={d.name}>{d.code} - {d.name}</option>
                             ))}
                         </select>
                     </div>

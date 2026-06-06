@@ -1,7 +1,3 @@
-// ============================================
-// USER MODEL - Consolidated Authentication & Profile
-// ============================================
-
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -37,21 +33,25 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    departmentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Department",
-        default: null
+    firstLogin: {
+        type: Boolean,
+        default: true
     },
-    // Student specific
-    studentId: {
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    department: {
         type: String,
         default: ""
     },
-    // Lecturer specific
-    lecturerId: {
+    registrationNumber: {
         type: String,
-        default: ""
+        required: [true, "Please add a registration or employee ID"],
+        unique: true,
+        trim: true
     },
+    // Keep specialization for lecturers
     specialization: {
         type: String,
         default: ""
@@ -65,13 +65,12 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to hash password before saving
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
     if (!this.isModified("password")) {
-        return next();
+        return;
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
 // Method to compare entered password with hashed password
@@ -88,16 +87,13 @@ userSchema.methods.getSignedJwtToken = function () {
 
 // Generate and hash password token
 userSchema.methods.getResetPasswordToken = function () {
-    // Generate token
     const resetToken = crypto.randomBytes(20).toString("hex");
 
-    // Hash token and set to resetPasswordToken field
     this.resetPasswordToken = crypto
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
 
-    // Set expire (10 mins)
     this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
     return resetToken;

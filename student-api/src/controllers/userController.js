@@ -15,22 +15,24 @@ const logAudit = async (action, details, performerId, ip) => {
 // ============================================
 exports.getUsers = async (req, res) => {
     try {
-        const { role, departmentId, search } = req.query;
+        const { role, department, search } = req.query;
         let query = {};
 
         if (role) {
             query.role = role;
         }
-        if (departmentId) {
-            query.departmentId = departmentId;
+        if (department) {
+            query.department = { $regex: department, $options: "i" };
         }
         if (search) {
-            query.name = { $regex: search, $options: "i" };
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } },
+                { registrationNumber: { $regex: search, $options: "i" } }
+            ];
         }
 
-        const users = await User.find(query)
-            .populate("departmentId", "name code")
-            .select("-password");
+        const users = await User.find(query).select("-password");
 
         res.status(200).json({
             success: true,
@@ -51,47 +53,64 @@ exports.getUsers = async (req, res) => {
 // ============================================
 exports.createUser = async (req, res) => {
     try {
-        const { name, email, password, role, departmentId, specialization } = req.body;
+        const { name, email, role, department, registrationNumber, specialization } = req.body;
 
-        const userExists = await User.findOne({ email });
-        if (userExists) {
+        if (!name || !email || !registrationNumber || !role) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill in name, email, registrationNumber, and role"
+            });
+        }
+
+        // 1. Check if user already exists
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
             return res.status(400).json({
                 success: false,
                 message: "Email is already in use"
             });
         }
 
-        let studentId = "";
-        let lecturerId = "";
-        if (role === "student") {
-            studentId = "STU-" + Math.floor(100000 + Math.random() * 900000);
-        } else if (role === "lecturer") {
-            lecturerId = "LEC-" + Math.floor(100000 + Math.random() * 900000);
+        const regExists = await User.findOne({ registrationNumber });
+        if (regExists) {
+            return res.status(400).json({
+                success: false,
+                message: "Registration or Employee ID is already in use"
+            });
         }
 
+        // 2. Generate a temporary password (meets complexity checks: e.g. Temp@123456)
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        const temporaryPassword = `Temp@${randomNum}`;
+
+        // 3. Create user
         const user = await User.create({
             name,
             email,
-            password,
+            password: temporaryPassword, // Hashed in pre-save hook
             role,
-            departmentId: departmentId || null,
-            studentId,
-            lecturerId,
+            department: department || "",
+            registrationNumber,
+            firstLogin: true, // Force change password on first login
+            isActive: true,
             specialization: specialization || ""
         });
 
-        await logAudit("ADMIN_CREATE_USER", `Admin created user: ${user.email} with role: ${user.role}`, req.user._id, req.ip);
+        await logAudit("ADMIN_CREATE_USER", `Admin created user: ${user.email} (${user.role})`, req.user._id, req.ip);
 
         res.status(201).json({
             success: true,
-            message: `${role.charAt(0).toUpperCase() + role.slice(1)} created successfully!`,
+            message: `${role.charAt(0).toUpperCase() + role.slice(1)} account created successfully!`,
+            temporaryPassword, // Shared with Admin to pass manually
             data: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                studentId: user.studentId,
-                lecturerId: user.lecturerId
+                firstLogin: user.firstLogin,
+                isActive: user.isActive,
+                department: user.department,
+                registrationNumber: user.registrationNumber
             }
         });
     } catch (error) {
@@ -108,7 +127,7 @@ exports.createUser = async (req, res) => {
 // ============================================
 exports.updateUser = async (req, res) => {
     try {
-        const { name, email, departmentId, specialization, role } = req.body;
+        const { name, email, department, registrationNumber, specialization, role } = req.body;
         const user = await User.findById(req.params.id);
 
         if (!user) {
@@ -120,23 +139,100 @@ exports.updateUser = async (req, res) => {
 
         if (name) user.name = name;
         if (email) user.email = email;
-        if (departmentId !== undefined) user.departmentId = departmentId || null;
+        if (department !== undefined) user.department = department;
+        if (registrationNumber) user.registrationNumber = registrationNumber;
         if (specialization !== undefined) user.specialization = specialization;
         if (role) user.role = role;
 
         await user.save();
 
-        await logAudit("ADMIN_UPDATE_USER", `Admin updated user: ${user.email}`, req.user._id, req.ip);
+        await logAudit("ADMIN_UPDATE_USER", `Admin updated user details: ${user.email}`, req.user._id, req.ip);
 
         res.status(200).json({
             success: true,
-            message: "User updated successfully",
+            message: "User account updated successfully",
             data: user
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to update user",
+            error: error.message
+        });
+    }
+};
+
+// ============================================
+// RESET USER PASSWORD (Admin only)
+// ============================================
+exports.resetUserPassword = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Generate new temporary password
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        const temporaryPassword = `Reset@${randomNum}`;
+
+        user.password = temporaryPassword;
+        user.firstLogin = true; // Mark firstLogin back to true, forcing change
+        await user.save();
+
+        await logAudit("ADMIN_RESET_PASSWORD", `Admin reset password for user: ${user.email}`, req.user._id, req.ip);
+
+        res.status(200).json({
+            success: true,
+            message: "Password reset completed! Share the new temporary password.",
+            temporaryPassword
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to reset password",
+            error: error.message
+        });
+    }
+};
+
+// ============================================
+// TOGGLE USER ACTIVE STATUS (Admin only)
+// ============================================
+exports.toggleUserStatus = async (req, res) => {
+    try {
+        const { isActive } = req.body;
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        user.isActive = isActive;
+        await user.save();
+
+        await logAudit(
+            user.isActive ? "ADMIN_ACTIVATE_USER" : "ADMIN_SUSPEND_USER",
+            `Admin ${user.isActive ? "activated" : "deactivated"} user: ${user.email}`,
+            req.user._id,
+            req.ip
+        );
+
+        res.status(200).json({
+            success: true,
+            message: `User account has been ${user.isActive ? "activated" : "deactivated"}!`,
+            data: user
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to toggle user status",
             error: error.message
         });
     }

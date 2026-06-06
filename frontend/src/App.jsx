@@ -10,7 +10,6 @@ import Sidebar from "./components/Sidebar";
 
 // Import Pages
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +19,7 @@ import QuizSession from "./pages/QuizSession";
 import Catalog from "./pages/Catalog";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
 
 /**
  * PROTECTED ROUTE GUARD
@@ -58,82 +58,98 @@ const AppContent = () => {
 
     return (
         <BrowserRouter>
-            {user && <Navbar />}
+            {user && !user.firstLogin && <Navbar />}
             
             {user ? (
-                <div className="app-container">
-                    <Sidebar />
-                    <main className="main-content">
+                user.firstLogin ? (
+                    <main style={{ padding: "2rem 0", width: "100%", minHeight: "100vh" }}>
                         <Routes>
-                            {/* Authenticated Workspace Routes */}
-                            <Route
-                                path="/dashboard"
-                                element={
-                                    <ProtectedRoute>
-                                        <Dashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/courses"
-                                element={
-                                    <ProtectedRoute>
-                                        <Courses />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/courses/:id"
-                                element={
-                                    <ProtectedRoute>
-                                        <CourseDetails />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/courses/:courseId/quizzes/:quizId"
-                                element={
-                                    <ProtectedRoute>
-                                        <QuizSession />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/catalog"
-                                element={
-                                    <ProtectedRoute allowedRoles={["student"]}>
-                                        <Catalog />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/admin"
-                                element={
-                                    <ProtectedRoute allowedRoles={["admin"]}>
-                                        <Admin />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/profile"
-                                element={
-                                    <ProtectedRoute>
-                                        <Profile />
-                                    </ProtectedRoute>
-                                }
-                            />
-
-                            {/* Fallback Redirect */}
-                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/change-password" element={<ChangePassword />} />
+                            <Route path="*" element={<Navigate to="/change-password" replace />} />
                         </Routes>
                     </main>
-                </div>
+                ) : (
+                    <div className="app-container">
+                        <Sidebar />
+                        <main className="main-content">
+                            <Routes>
+                                {/* Authenticated Workspace Routes */}
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/courses"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Courses />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/courses/:id"
+                                    element={
+                                        <ProtectedRoute>
+                                            <CourseDetails />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/courses/:courseId/quizzes/:quizId"
+                                    element={
+                                        <ProtectedRoute>
+                                            <QuizSession />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/catalog"
+                                    element={
+                                        <ProtectedRoute allowedRoles={["student"]}>
+                                            <Catalog />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <ProtectedRoute allowedRoles={["admin"]}>
+                                            <Admin />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/profile"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Profile />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/change-password"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ChangePassword />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Fallback Redirect */}
+                                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                            </Routes>
+                        </main>
+                    </div>
+                )
             ) : (
                 <main>
                     <Routes>
                         {/* Public Auth Routes */}
                         <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password/:token" element={<ResetPassword />} />
 

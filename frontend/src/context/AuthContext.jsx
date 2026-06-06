@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import api from "../services/api";
 
-// Create the context
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -16,14 +15,12 @@ export const AuthProvider = ({ children }) => {
 
             if (token && storedUser) {
                 try {
-                    // Fetch fresh profile details from the unified /auth/me
                     const response = await api.get("/auth/me");
                     const userData = response.data.data;
                     setUser(userData);
                     localStorage.setItem("user", JSON.stringify(userData));
                 } catch (error) {
                     console.error("Error verifying token or session expired:", error);
-                    // Clear credentials if verification fails (e.g. 401 Unauthorized)
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
                     setUser(null);
@@ -59,37 +56,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // 3. REGISTER action
-    const register = async (name, email, password, role = "student", departmentId = "") => {
-        try {
-            const payload = { name, email, password, role };
-            if (departmentId) {
-                payload.departmentId = departmentId;
-            }
-            const response = await api.post("/auth/register", payload);
-            const { token, data } = response.data;
-
-            // Auto-login after registration
-            localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(data));
-
-            setUser(data);
-            return { success: true };
-        } catch (error) {
-            console.error("Registration Context Error:", error);
-            const errors = error.response?.data?.errors || [error.response?.data?.message || "Registration failed."];
-            throw new Error(errors.join(", "));
-        }
-    };
-
-    // 4. LOGOUT action
+    // 3. LOGOUT action
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setUser(null);
     };
 
-    // 5. UPDATE PROFILE action
+    // 4. UPDATE PROFILE action
     const updateProfile = async (formData) => {
         try {
             const response = await api.put("/auth/profile", formData, {
@@ -108,8 +82,26 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // 5. CHANGE PASSWORD action
+    const changePassword = async (currentPassword, newPassword) => {
+        try {
+            const response = await api.put("/auth/change-password", { currentPassword, newPassword });
+            
+            // If change is successful, update user.firstLogin = false locally
+            const updatedUser = { ...user, firstLogin: false };
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            
+            return { success: true, message: response.data.message };
+        } catch (error) {
+            console.error("Change Password Error:", error);
+            const message = error.response?.data?.message || "Failed to change password.";
+            throw new Error(message);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, updateProfile, changePassword }}>
             {children}
         </AuthContext.Provider>
     );
