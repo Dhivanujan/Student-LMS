@@ -657,13 +657,15 @@ input, select, textarea {
     display: flex;
 }
 
-.input-with-icon .input-icon svg {
+.input-with-icon .input-icon svg,
+.input-with-icon svg.input-icon {
     width: 18px;
     height: 18px;
 }
 
 .input-with-icon .form-input {
     padding-left: 2.7rem;
+    padding-right: 2.7rem;
 }
 
 .input-with-icon:focus-within .input-icon {
@@ -772,7 +774,8 @@ textarea.form-input {
     flex-shrink: 0;
 }
 
-.logo .logo-dot {
+.logo .logo-dot,
+.auth-brand-logo .logo-dot {
     display: inline-block;
     width: 8px;
     height: 8px;
@@ -780,6 +783,8 @@ textarea.form-input {
     background: var(--role-accent);
     box-shadow: 0 0 8px var(--role-accent);
     margin-left: 2px;
+    color: transparent;
+    overflow: hidden;
 }
 
 .nav-right {
