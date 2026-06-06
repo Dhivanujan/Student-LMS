@@ -252,3 +252,44 @@ exports.gradeSubmission = async (req, res) => {
         });
     }
 };
+
+// ============================================
+// GET PENDING SUBMISSIONS (Lecturer/Admin only)
+// ============================================
+exports.getPendingSubmissions = async (req, res) => {
+    try {
+        const lecturerId = req.user.id;
+        const courses = await Course.find({ lecturerId });
+        const courseIds = courses.map(c => c._id);
+        const assignments = await Assignment.find({ courseId: { $in: courseIds } });
+        const assignmentIds = assignments.map(a => a._id);
+
+        const submissions = await Submission.find({
+            assignmentId: { $in: assignmentIds },
+            status: { $in: ["submitted", "late"] }
+        })
+        .populate("studentId", "name email studentId")
+        .populate({
+            path: "assignmentId",
+            select: "title maxMarks courseId dueDate",
+            populate: {
+                path: "courseId",
+                select: "name code"
+            }
+        })
+        .sort("-submittedAt");
+
+        res.status(200).json({
+            success: true,
+            count: submissions.length,
+            data: submissions
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch pending submissions",
+            error: error.message
+        });
+    }
+};
+
