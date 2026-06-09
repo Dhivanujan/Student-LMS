@@ -46,7 +46,7 @@ const ResetPassword = () => {
             <div className="auth-form-panel" style={{ maxWidth: "500px", flex: "1 1 auto" }}>
                 <div className="auth-form-card">
                     <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                        <div className="auth-feature-icon" style={{ margin: "0 auto 1rem auto", width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary-400)" }}>
+                        <div className="auth-feature-icon" style={{ margin: "0 auto 1rem auto", width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "24px", height: "24px" }}>
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -116,7 +116,7 @@ const ResetPassword = () => {
                     </form>
 
                     <div className="auth-form-footer" style={{ marginTop: "1.5rem", textAlign: "center" }}>
-                        <Link to="/login" style={{ fontSize: "0.85rem", color: "var(--primary-400)" }}>
+                        <Link to="/login" style={{ fontSize: "0.85rem", color: "var(--accent)" }}>
                             Back to Login
                         </Link>
                     </div>

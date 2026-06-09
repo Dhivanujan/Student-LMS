@@ -40,7 +40,7 @@ const ForgotPassword = () => {
             <div className="auth-form-panel" style={{ maxWidth: "500px", flex: "1 1 auto" }}>
                 <div className="auth-form-card">
                     <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                        <div className="auth-feature-icon" style={{ margin: "0 auto 1rem auto", width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary-400)" }}>
+                        <div className="auth-feature-icon" style={{ margin: "0 auto 1rem auto", width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "24px", height: "24px" }}>
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                 <polyline points="22,6 12,13 2,6"/>
@@ -58,7 +58,7 @@ const ForgotPassword = () => {
                     {resetLink && (
                         <div className="alert alert-success animate-fade-in" style={{ wordBreak: "break-all" }}>
                             <strong>Demo Reset Link:</strong> <br />
-                            <Link to={resetLink} className="link-alt" style={{ fontWeight: "700", textDecoration: "underline" }}>
+                            <Link to={resetLink} className="link-alt" style={{ fontWeight: "700", textDecoration: "underline", color: "var(--primary)" }}>
                                 Reset Password Now (Click here)
                             </Link>
                         </div>
@@ -76,7 +76,7 @@ const ForgotPassword = () => {
                                     type="email"
                                     id="email"
                                     className="form-input"
-                                    placeholder="john@school.edu"
+                                    placeholder="your-name@unilms.edu"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -100,7 +100,7 @@ const ForgotPassword = () => {
                     </form>
 
                     <div className="auth-form-footer" style={{ marginTop: "1.5rem", textAlign: "center" }}>
-                        <Link to="/login" style={{ fontSize: "0.85rem", color: "var(--primary-400)" }}>
+                        <Link to="/login" style={{ fontSize: "0.85rem", color: "var(--accent)" }}>
                             Back to Login
                         </Link>
                     </div>

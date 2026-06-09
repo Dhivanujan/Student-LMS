@@ -44,7 +44,7 @@ const CursorGlow = () => {
                 width: "260px",
                 height: "260px",
                 borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, rgba(132, 204, 22, 0.04) 45%, rgba(22, 101, 52, 0) 70%)",
+                background: "radial-gradient(circle, var(--primary-glow-strong) 0%, var(--accent-glow) 45%, transparent 70%)",
                 transform: `translate(${position.x - 130}px, ${position.y - 130}px)`,
                 pointerEvents: "none",
                 zIndex: 0, // Behind elements, above background

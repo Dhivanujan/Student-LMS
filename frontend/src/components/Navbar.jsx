@@ -112,8 +112,24 @@ const Navbar = () => {
                     </button>
                 )}
 
-                <NavLink to="/dashboard" className="logo">
-                    EduNex<span className="logo-dot">.</span>
+                <NavLink to="/dashboard" className="logo" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
+                    <svg viewBox="0 0 100 110" width="32" height="35" className="oxford-crest-svg" style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 }}>
+                        <path d="M10,10 L90,10 C90,10 90,65 50,100 C10,65 10,10 10,10 Z" fill="#002147" stroke="#C5A059" strokeWidth="3"/>
+                        <path d="M30,55 C35,51 45,51 50,55 C55,51 65,51 70,55 L70,35 C65,31 55,31 50,35 C45,31 35,31 30,35 Z" fill="#FFFFFF" stroke="#002147" strokeWidth="1.5"/>
+                        <line x1="50" y1="35" x2="50" y2="55" stroke="#002147" strokeWidth="1.5"/>
+                        <line x1="35" y1="39" x2="45" y2="39" stroke="#002147" strokeWidth="1"/>
+                        <line x1="35" y1="44" x2="45" y2="44" stroke="#002147" strokeWidth="1"/>
+                        <line x1="35" y1="49" x2="43" y2="49" stroke="#002147" strokeWidth="1"/>
+                        <line x1="55" y1="39" x2="65" y2="39" stroke="#002147" strokeWidth="1"/>
+                        <line x1="55" y1="44" x2="65" y2="44" stroke="#002147" strokeWidth="1"/>
+                        <line x1="55" y1="49" x2="63" y2="49" stroke="#002147" strokeWidth="1"/>
+                        <path d="M22,23 L28,23 L29,20 L27,21 L25,18 L23,21 L21,20 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
+                        <path d="M72,23 L78,23 L79,20 L77,21 L75,18 L73,21 L71,20 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
+                        <path d="M47,73 L53,73 L54,70 L52,71 L50,68 L48,71 L46,70 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
+                    </svg>
+                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: "800", fontSize: "1.35rem", letterSpacing: "-0.02em", color: "var(--primary)", display: "flex", alignItems: "center" }}>
+                        Oxford&nbsp;<span style={{ color: "var(--accent)", fontWeight: "500" }}>Canvas</span>
+                    </span>
                 </NavLink>
 
                 {user && (
