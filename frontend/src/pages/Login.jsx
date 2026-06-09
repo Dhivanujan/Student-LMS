@@ -137,7 +137,7 @@ const Login = () => {
                             fontSize: "0.95rem", 
                             borderRadius: "var(--radius-md)", 
                             border: "1.5px solid var(--accent)", 
-                            boxShadow: "0 4px 15px rgba(0,33,71,0.25)",
+                            boxShadow: "0 4px 15px rgba(138, 21, 21, 0.2)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -147,12 +147,12 @@ const Login = () => {
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.transform = "translateY(-2px)";
-                            e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,33,71,0.4)";
+                            e.currentTarget.style.boxShadow = "0 8px 25px rgba(138, 21, 21, 0.3)";
                             e.currentTarget.style.background = "var(--primary-600)";
                         }}
                         onMouseLeave={(e) => {
                             e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,33,71,0.25)";
+                            e.currentTarget.style.boxShadow = "0 4px 15px rgba(138, 21, 21, 0.2)";
                             e.currentTarget.style.background = "var(--primary)";
                         }}
                     >
@@ -170,9 +170,9 @@ const Login = () => {
                     </button>
 
                     <div className="login-divider" style={{ display: "flex", alignItems: "center", margin: "1.8rem 0", color: "var(--text-muted)", fontSize: "0.82rem" }}>
-                        <span style={{ flex: 1, height: "1px", background: "rgba(0,33,71,0.08)" }}></span>
+                        <span style={{ flex: 1, height: "1px", background: "var(--border-color)" }}></span>
                         <span style={{ padding: "0 0.85rem", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>or alternative log in</span>
-                        <span style={{ flex: 1, height: "1px", background: "rgba(0,33,71,0.08)" }}></span>
+                        <span style={{ flex: 1, height: "1px", background: "var(--border-color)" }}></span>
                     </div>
 
                     <form onSubmit={handleSubmit}>
