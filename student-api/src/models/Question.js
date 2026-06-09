@@ -13,7 +13,7 @@ const questionSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["mcq", "true_false", "short_answer"],
+        enum: ["mcq", "true_false", "short_answer", "matching", "essay"],
         required: [true, "Please specify the question type"]
     },
     options: [

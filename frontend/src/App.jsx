@@ -21,6 +21,12 @@ import Catalog from "./pages/Catalog";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/ChangePassword";
+import PortfolioPage from "./pages/PortfolioPage";
+import LibraryPage from "./pages/LibraryPage";
+import EventsPage from "./pages/EventsPage";
+import TimetablePage from "./pages/TimetablePage";
+import FeedbackPage from "./pages/FeedbackPage";
+import ExamsPage from "./pages/ExamsPage";
 
 /**
  * PROTECTED ROUTE GUARD
@@ -121,6 +127,54 @@ const AppContent = () => {
                                     element={
                                         <ProtectedRoute allowedRoles={["admin"]}>
                                             <Admin />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/portfolio"
+                                    element={
+                                        <ProtectedRoute>
+                                            <PortfolioPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/library"
+                                    element={
+                                        <ProtectedRoute>
+                                            <LibraryPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/events"
+                                    element={
+                                        <ProtectedRoute>
+                                            <EventsPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/timetables"
+                                    element={
+                                        <ProtectedRoute>
+                                            <TimetablePage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/feedback"
+                                    element={
+                                        <ProtectedRoute>
+                                            <FeedbackPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/exams"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ExamsPage />
                                         </ProtectedRoute>
                                     }
                                 />

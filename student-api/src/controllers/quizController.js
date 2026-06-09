@@ -149,12 +149,12 @@ exports.submitQuizAttempt = async (req, res) => {
             const studentVal = studentAnswerObj ? studentAnswerObj.value : "";
             
             let questionScore = 0;
-            if (question.type === "mcq" || question.type === "true_false") {
+            if (question.type === "mcq" || question.type === "true_false" || question.type === "matching") {
                 // Auto-grading: Case-insensitive match
                 if (studentVal.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase()) {
                     questionScore = question.points;
                 }
-            } else if (question.type === "short_answer") {
+            } else if (question.type === "short_answer" || question.type === "essay") {
                 hasShortAnswer = true;
                 // Leave grading to lecturer, default 0
                 questionScore = 0;

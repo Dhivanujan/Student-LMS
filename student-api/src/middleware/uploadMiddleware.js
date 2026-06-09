@@ -22,14 +22,14 @@ const storage = multer.diskStorage({
 
 // File filter (restrict file types if necessary)
 const fileFilter = (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|pdf|doc|docx|ppt|pptx|mp4|avi|mkv/;
+    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx|ppt|pptx|mp4|avi|mkv|mp3|wav|m4a|aac|ogg/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
+    const mimetype = filetypes.test(file.mimetype) || file.mimetype.startsWith("audio/") || file.mimetype.startsWith("video/") || file.mimetype.startsWith("image/");
 
-    if (extname && mimetype) {
+    if (extname || mimetype) {
         return cb(null, true);
     } else {
-        cb(new Error("Supported formats: Images, PDF, Word, PowerPoint, Video only!"));
+        cb(new Error("Supported formats: Images, PDF, Docs, PPT, Audio, and Video files!"));
     }
 };
 

@@ -2,6 +2,7 @@ const Course = require("../models/Course");
 const User = require("../models/User");
 const Enrollment = require("../models/Enrollment");
 const AuditLog = require("../models/AuditLog");
+const CourseMaterial = require("../models/CourseMaterial");
 
 // Helper to log audit actions
 const logAudit = async (action, details, performerId, ip) => {
@@ -70,10 +71,17 @@ exports.getCourseById = async (req, res) => {
         
         const enrolledStudents = enrollments.map(e => e.studentId);
 
+        // Fetch course materials from separate collection
+        const materials = await CourseMaterial.find({ courseId: course._id })
+            .populate("uploadedBy", "name");
+
+        const courseObj = course.toObject();
+        courseObj.materials = materials;
+
         res.status(200).json({
             success: true,
             data: {
-                course,
+                course: courseObj,
                 enrolledStudents
             }
         });
@@ -280,20 +288,18 @@ exports.uploadMaterial = async (req, res) => {
             fileUrl = `/uploads/${req.file.filename}`;
         }
 
-        const newMaterial = {
+        const newMaterial = await CourseMaterial.create({
+            courseId: course._id,
             title,
             fileType,
             fileUrl,
-            uploadedAt: Date.now()
-        };
-
-        course.materials.push(newMaterial);
-        await course.save();
+            uploadedBy: req.user.id
+        });
 
         res.status(201).json({
             success: true,
             message: "Learning material uploaded successfully!",
-            data: course.materials[course.materials.length - 1]
+            data: newMaterial
         });
     } catch (error) {
         res.status(500).json({
@@ -325,10 +331,7 @@ exports.deleteMaterial = async (req, res) => {
             });
         }
 
-        course.materials = course.materials.filter(
-            (mat) => mat._id.toString() !== req.params.materialId
-        );
-        await course.save();
+        await CourseMaterial.findByIdAndDelete(req.params.materialId);
 
         res.status(200).json({
             success: true,

@@ -20,7 +20,12 @@ const resultSchema = new mongoose.Schema({
     quizId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Quiz",
-        required: true
+        required: false // Optional for exams
+    },
+    examId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Exam",
+        required: false // Optional for quizzes
     },
     studentId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -30,11 +35,19 @@ const resultSchema = new mongoose.Schema({
     answers: [answerSchema],
     score: {
         type: Number,
-        default: 0
+        default: 0 // Marks obtained
     },
     totalMarks: {
         type: Number,
         required: true
+    },
+    grade: {
+        type: String,
+        default: "" // e.g. "A+", "A", "B", "C", "F"
+    },
+    gradePoints: {
+        type: Number,
+        default: 0.0 // e.g. 4.00, 3.00, etc. for GPA
     },
     graded: {
         type: Boolean,
