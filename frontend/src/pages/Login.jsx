@@ -55,21 +55,18 @@ const Login = () => {
         <div className="auth-layout">
             <div className="auth-brand-panel">
                 <div className="auth-brand-content">
-                    <div className="auth-brand-logo" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.2rem", marginBottom: "1.5rem" }}>
-                        <svg viewBox="0 0 100 110" width="76" height="84" className="oxford-crest-svg" style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", filter: "drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.4))", color: "var(--accent)" }}>
-                            <path d="M10,10 L90,10 C90,10 90,65 50,100 C10,65 10,10 10,10 Z" fill="#002147" stroke="#C5A059" strokeWidth="3.5"/>
-                            <path d="M30,55 C35,51 45,51 50,55 C55,51 65,51 70,55 L70,35 C65,31 55,31 50,35 C45,31 35,31 30,35 Z" fill="#FFFFFF" stroke="#002147" strokeWidth="1.5"/>
-                            <line x1="50" y1="35" x2="50" y2="55" stroke="#002147" strokeWidth="1.5"/>
-                            <line x1="35" y1="39" x2="45" y2="39" stroke="#002147" strokeWidth="1"/>
-                            <line x1="35" y1="44" x2="45" y2="44" stroke="#002147" strokeWidth="1"/>
-                            <line x1="35" y1="49" x2="43" y2="49" stroke="#002147" strokeWidth="1"/>
-                            <line x1="55" y1="39" x2="65" y2="39" stroke="#002147" strokeWidth="1"/>
-                            <line x1="55" y1="44" x2="65" y2="44" stroke="#002147" strokeWidth="1"/>
-                            <line x1="55" y1="49" x2="63" y2="49" stroke="#002147" strokeWidth="1"/>
-                            <path d="M22,23 L28,23 L29,20 L27,21 L25,18 L23,21 L21,20 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
-                            <path d="M72,23 L78,23 L79,20 L77,21 L75,18 L73,21 L71,20 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
-                            <path d="M47,73 L53,73 L54,70 L52,71 L50,68 L48,71 L46,70 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
-                        </svg>
+                    <div className="auth-brand-logo" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+                        <img 
+                            src="/logo.png" 
+                            alt="SVIAS Logo" 
+                            style={{ 
+                                width: "95px", 
+                                height: "95px", 
+                                objectFit: "contain", 
+                                filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.3))",
+                                marginBottom: "0.5rem"
+                            }} 
+                        />
                         <span style={{ fontSize: "1.75rem", fontWeight: "800", color: "#FFFFFF", letterSpacing: "-0.02em", textAlign: "center", lineHeight: "1.25" }}>
                             SWAMY VIPULANANDA<br />
                             <span style={{ fontSize: "1.15rem", color: "var(--accent)", fontFamily: "var(--font-heading)", fontWeight: "500", textTransform: "uppercase", display: "block", marginTop: "0.25rem", letterSpacing: "0.04em" }}>
@@ -159,11 +156,16 @@ const Login = () => {
                             e.currentTarget.style.background = "var(--primary)";
                         }}
                     >
-                        <svg viewBox="0 0 100 110" width="18" height="20" style={{ fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0, color: "var(--accent)" }}>
-                            <path d="M10,10 L90,10 C90,10 90,65 50,100 C10,65 10,10 10,10 Z" fill="#002147" stroke="#C5A059" strokeWidth="5"/>
-                            <path d="M30,55 C35,51 45,51 50,55 C55,51 65,51 70,55 L70,35 C65,31 55,31 50,35 C45,31 35,31 30,35 Z" fill="#FFFFFF" stroke="#002147" strokeWidth="2"/>
-                            <line x1="50" y1="35" x2="50" y2="55" stroke="#002147" strokeWidth="2"/>
-                        </svg>
+                        <img 
+                            src="/logo.png" 
+                            alt="SVIAS Logo" 
+                            style={{ 
+                                width: "20px", 
+                                height: "20px", 
+                                objectFit: "contain",
+                                flexShrink: 0
+                            }} 
+                        />
                         <span>SVIAS Single Sign-On (SSO)</span>
                     </button>
 
