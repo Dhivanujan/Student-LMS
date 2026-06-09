@@ -128,7 +128,7 @@ const Navbar = () => {
                         <path d="M47,73 L53,73 L54,70 L52,71 L50,68 L48,71 L46,70 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
                     </svg>
                     <span style={{ fontFamily: "var(--font-heading)", fontWeight: "800", fontSize: "1.35rem", letterSpacing: "-0.02em", color: "var(--primary)", display: "flex", alignItems: "center" }}>
-                        Oxford&nbsp;<span style={{ color: "var(--accent)", fontWeight: "500" }}>Canvas</span>
+                        SVIAS&nbsp;<span style={{ color: "var(--accent)", fontWeight: "500" }}>Canvas</span>
                     </span>
                 </NavLink>
 

@@ -70,9 +70,14 @@ const Login = () => {
                             <path d="M72,23 L78,23 L79,20 L77,21 L75,18 L73,21 L71,20 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
                             <path d="M47,73 L53,73 L54,70 L52,71 L50,68 L48,71 L46,70 Z" fill="#C5A059" stroke="#C5A059" strokeWidth="0.5"/>
                         </svg>
-                        <span style={{ fontSize: "2.4rem", fontWeight: "900", color: "#FFFFFF", letterSpacing: "-0.03em", textAlign: "center", lineHeight: "1.15" }}>
-                            UNIVERSITY OF<br />
-                            <span style={{ color: "var(--accent)", fontFamily: "var(--font-heading)", fontWeight: "400" }}>OXFORD</span>
+                        <span style={{ fontSize: "1.75rem", fontWeight: "800", color: "#FFFFFF", letterSpacing: "-0.02em", textAlign: "center", lineHeight: "1.25" }}>
+                            SWAMY VIPULANANDA<br />
+                            <span style={{ fontSize: "1.15rem", color: "var(--accent)", fontFamily: "var(--font-heading)", fontWeight: "500", textTransform: "uppercase", display: "block", marginTop: "0.25rem", letterSpacing: "0.04em" }}>
+                                Institute of Aesthetic Studies
+                            </span>
+                            <span style={{ fontSize: "0.95rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: "400", display: "block", marginTop: "0.25rem", letterSpacing: "0.01em" }}>
+                                Eastern University, Sri Lanka
+                            </span>
                         </span>
                     </div>
                     <p className="auth-brand-tagline" style={{ fontSize: "1.1rem", fontWeight: "400", letterSpacing: "0.02em" }}>
@@ -159,7 +164,7 @@ const Login = () => {
                             <path d="M30,55 C35,51 45,51 50,55 C55,51 65,51 70,55 L70,35 C65,31 55,31 50,35 C45,31 35,31 30,35 Z" fill="#FFFFFF" stroke="#002147" strokeWidth="2"/>
                             <line x1="50" y1="35" x2="50" y2="55" stroke="#002147" strokeWidth="2"/>
                         </svg>
-                        <span>Oxford Single Sign-On (SSO)</span>
+                        <span>SVIAS Single Sign-On (SSO)</span>
                     </button>
 
                     <div className="login-divider" style={{ display: "flex", alignItems: "center", margin: "1.8rem 0", color: "var(--text-muted)", fontSize: "0.82rem" }}>
