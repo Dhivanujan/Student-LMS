@@ -351,6 +351,8 @@ const UsersPanel = ({ departments }) => {
     >
         <option value="student">Student</option>
         <option value="lecturer">Lecturer</option>
+        <option value="hod">Head of Department (HOD)</option>
+        <option value="exam_officer">Examination Officer</option>
         <option value="admin">Admin</option>
     </select>
 </div>
@@ -365,10 +367,10 @@ const UsersPanel = ({ departments }) => {
                         </select>
                     </div>
 
-                    {role === "lecturer" && (
+                    {(role === "lecturer" || role === "hod") && (
                         <div className="form-group animate-slide-down">
                             <label>Specialization Field</label>
-                            <input type="text" className="form-input" placeholder="e.g. Theoretical Physics" value={specialization} onChange={e => setSpecialization(e.target.value)} />
+                            <input type="text" className="form-input" placeholder="e.g. Carnatic Music Composition" value={specialization} onChange={e => setSpecialization(e.target.value)} />
                         </div>
                     )}
 

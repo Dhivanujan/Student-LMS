@@ -1,5 +1,8 @@
 const User = require("../models/User");
 const AuditLog = require("../models/AuditLog");
+const Student = require("../models/Student");
+const Lecturer = require("../models/Lecturer");
+const Department = require("../models/Department");
 
 // Helper to log audit actions
 const logAudit = async (action, details, performerId, ip) => {
@@ -7,6 +10,61 @@ const logAudit = async (action, details, performerId, ip) => {
         await AuditLog.create({ action, details, performerId, ipAddress: ip || "" });
     } catch (err) {
         console.error("Audit log failed:", err.message);
+    }
+};
+
+// Helper to sync user profile with sub-collections Student/Lecturer
+const syncUserProfile = async (user, spec) => {
+    try {
+        let departmentId = null;
+        if (user.department) {
+            const dept = await Department.findOne({ name: user.department });
+            if (dept) {
+                departmentId = dept._id;
+            }
+        }
+
+        if (user.role === "student") {
+            let student = await Student.findOne({ userId: user._id });
+            if (!student) {
+                await Student.create({
+                    userId: user._id,
+                    departmentId,
+                    registrationNumber: user.registrationNumber,
+                    academicYear: "1st Year",
+                    semester: 1,
+                    gpa: 0.0
+                });
+            } else {
+                student.departmentId = departmentId;
+                student.registrationNumber = user.registrationNumber;
+                await student.save();
+            }
+            await Lecturer.findOneAndDelete({ userId: user._id });
+        } else if (user.role === "lecturer" || user.role === "hod") {
+            let lecturer = await Lecturer.findOne({ userId: user._id });
+            if (!lecturer) {
+                await Lecturer.create({
+                    userId: user._id,
+                    departmentId,
+                    employeeId: user.registrationNumber,
+                    specialization: spec || user.specialization || "",
+                    qualifications: [],
+                    biography: ""
+                });
+            } else {
+                lecturer.departmentId = departmentId;
+                lecturer.employeeId = user.registrationNumber;
+                if (spec !== undefined) lecturer.specialization = spec;
+                await lecturer.save();
+            }
+            await Student.findOneAndDelete({ userId: user._id });
+        } else {
+            await Student.findOneAndDelete({ userId: user._id });
+            await Lecturer.findOneAndDelete({ userId: user._id });
+        }
+    } catch (err) {
+        console.error("Failed to sync sub-profile:", err.message);
     }
 };
 
@@ -96,6 +154,9 @@ exports.createUser = async (req, res) => {
             specialization: specialization || ""
         });
 
+        // Sync profile to sub-collections
+        await syncUserProfile(user, specialization);
+
         await logAudit("ADMIN_CREATE_USER", `Admin created user: ${user.email} (${user.role})`, req.user._id, req.ip);
 
         res.status(201).json({
@@ -145,6 +206,9 @@ exports.updateUser = async (req, res) => {
         if (role) user.role = role;
 
         await user.save();
+
+        // Sync profile to sub-collections
+        await syncUserProfile(user, specialization);
 
         await logAudit("ADMIN_UPDATE_USER", `Admin updated user details: ${user.email}`, req.user._id, req.ip);
 
@@ -252,6 +316,8 @@ exports.deleteUser = async (req, res) => {
         }
 
         await User.findByIdAndDelete(req.params.id);
+        await Student.findOneAndDelete({ userId: user._id });
+        await Lecturer.findOneAndDelete({ userId: user._id });
 
         await logAudit("ADMIN_DELETE_USER", `Admin deleted user: ${user.email}`, req.user._id, req.ip);
 
