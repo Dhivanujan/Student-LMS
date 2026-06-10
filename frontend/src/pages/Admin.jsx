@@ -3,8 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 
 const Admin = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get("tab") || "users";
+
+    const handleTabChange = (tabName) => {
+        setSearchParams({ tab: tabName });
+    };
 
     // General state
     const [departments, setDepartments] = useState([]);
@@ -52,6 +56,63 @@ const Admin = () => {
                 <p className="page-subtitle" style={{ margin: 0 }}>
                     Global configuration settings. Academic structures, user rosters, course catalog, and active enrollment requests.
                 </p>
+            </div>
+
+            {/* Premium Horizontal Navigation Tabs */}
+            <div className="tabs-header animate-slide-up stagger-2" style={{ marginBottom: "2rem" }}>
+                <button 
+                    className={`tab-btn ${activeTab === "users" ? "active" : ""}`} 
+                    onClick={() => handleTabChange("users")}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Manage Users</span>
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === "courses" ? "active" : ""}`} 
+                    onClick={() => handleTabChange("courses")}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                    </svg>
+                    <span>Manage Courses</span>
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === "enrollments" ? "active" : ""}`} 
+                    onClick={() => handleTabChange("enrollments")}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    </svg>
+                    <span>Course Enrollments</span>
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === "faculties" ? "active" : ""}`} 
+                    onClick={() => handleTabChange("faculties")}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <line x1="9" y1="22" x2="9" y2="16"/>
+                        <line x1="15" y1="22" x2="15" y2="16"/>
+                        <line x1="9" y1="16" x2="15" y2="16"/>
+                    </svg>
+                    <span>Academic Units</span>
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === "audit-logs" ? "active" : ""}`} 
+                    onClick={() => handleTabChange("audit-logs")}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <span>System Logs</span>
+                </button>
             </div>
 
             {activeTab === "users" && <UsersPanel departments={departments} />}
@@ -170,9 +231,12 @@ const UsersPanel = ({ departments }) => {
             <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                     <h3 style={{ margin: 0 }}>User Accounts Registry</h3>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                         <button onClick={() => setRoleFilter("student")} className={`btn ${roleFilter === "student" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Students</button>
                         <button onClick={() => setRoleFilter("lecturer")} className={`btn ${roleFilter === "lecturer" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Lecturers</button>
+                        <button onClick={() => setRoleFilter("hod")} className={`btn ${roleFilter === "hod" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>HODs</button>
+                        <button onClick={() => setRoleFilter("exam_officer")} className={`btn ${roleFilter === "exam_officer" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Exam Officers</button>
+                        <button onClick={() => setRoleFilter("admin")} className={`btn ${roleFilter === "admin" ? "btn-primary" : "btn-outline"}`} style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}>Admins</button>
                     </div>
                 </div>
 
@@ -189,15 +253,15 @@ const UsersPanel = ({ departments }) => {
                         <p style={{ margin: "0 0 0.8rem 0", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: "1.4" }}>
                             Copy the password below. The user is required to change this upon their first login to gain access.
                         </p>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(0,0,0,0.3)", padding: "0.5rem 0.8rem", borderRadius: "8px", border: "1px solid var(--border-color)", width: "fit-content" }}>
-                            <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: "bold", color: "#fff", letterSpacing: "1px" }}>{createdTempPassword}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(16, 185, 129, 0.06)", padding: "0.5rem 0.8rem", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.25)", width: "fit-content" }}>
+                            <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: "bold", color: "var(--success)", letterSpacing: "1px" }}>{createdTempPassword}</span>
                             <button 
                                 onClick={() => {
                                     navigator.clipboard.writeText(createdTempPassword);
                                     alert("Password copied to clipboard!");
                                 }} 
-                                className="btn btn-outline btn-sm" 
-                                style={{ padding: "0.2rem 0.5rem" }}
+                                className="btn btn-success btn-sm" 
+                                style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
                             >
                                 Copy
                             </button>
@@ -273,7 +337,11 @@ const UsersPanel = ({ departments }) => {
                                                     onClick={() => handleToggleStatus(u._id, u.isActive !== false)} 
                                                     className="btn-icon" 
                                                     title={u.isActive !== false ? "Suspend Account" : "Activate Account"}
-                                                    style={{ color: u.isActive !== false ? "var(--error)" : "var(--success)", background: "rgba(255,255,255,0.02)" }}
+                                                    style={{ 
+                                                        color: u.isActive !== false ? "var(--error)" : "var(--success)", 
+                                                        background: u.isActive !== false ? "var(--error-light)" : "var(--success-light)",
+                                                        borderColor: u.isActive !== false ? "var(--error-border)" : "var(--success-border)"
+                                                    }}
                                                 >
                                                     {u.isActive !== false ? (
                                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -290,7 +358,11 @@ const UsersPanel = ({ departments }) => {
                                                     onClick={() => handleResetPassword(u._id, u.email)} 
                                                     className="btn-icon"
                                                     title="Reset Password"
-                                                    style={{ color: "var(--primary-400)", background: "rgba(255,255,255,0.02)" }}
+                                                    style={{ 
+                                                        color: "var(--primary)", 
+                                                        background: "var(--primary-glow)", 
+                                                        borderColor: "var(--primary-glow-strong)" 
+                                                    }}
                                                 >
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -301,7 +373,11 @@ const UsersPanel = ({ departments }) => {
                                                     onClick={() => handleDeleteUser(u._id)} 
                                                     className="btn-icon"
                                                     title="Delete Account"
-                                                    style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                                    style={{ 
+                                                        color: "var(--error)", 
+                                                        background: "var(--error-light)", 
+                                                        borderColor: "var(--error-border)" 
+                                                    }}
                                                 >
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                         <polyline points="3 6 5 6 21 6"/>
@@ -342,24 +418,23 @@ const UsersPanel = ({ departments }) => {
                         />
                     </div>
                     <div className="form-group">
-    <label>Role</label>
-
-    <select
-        className="form-input dark-select"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-    >
-        <option value="student">Student</option>
-        <option value="lecturer">Lecturer</option>
-        <option value="hod">Head of Department (HOD)</option>
-        <option value="exam_officer">Examination Officer</option>
-        <option value="admin">Admin</option>
-    </select>
-</div>
+                        <label>Role</label>
+                        <select
+                            className="form-input"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                        >
+                            <option value="student">Student</option>
+                            <option value="lecturer">Lecturer</option>
+                            <option value="hod">Head of Department (HOD)</option>
+                            <option value="exam_officer">Examination Officer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
 
                     <div className="form-group">
                         <label>Department (Optional)</label>
-                        <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)} style={{ background: "var(--background-dark)" }}>
+                        <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)}>
                             <option value="">None</option>
                             {departments.map(d => (
                                 <option key={d._id} value={d.name}>{d.code} - {d.name}</option>
@@ -498,7 +573,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
                                                 value={c.lecturerId?._id || ""} 
                                                 onChange={e => handleAssignLecturer(c._id, e.target.value)}
                                                 className="form-input"
-                                                style={{ background: "var(--background-dark)", color: "var(--text-main)", border: "1px solid var(--border-color)", padding: "0.3rem 0.5rem", borderRadius: "6px", fontSize: "0.8rem" }}
+                                                style={{ backgroundColor: "var(--background-dark)", color: "var(--text-main)", border: "1px solid var(--border-color)", padding: "0.3rem 2.2rem 0.3rem 0.5rem", borderRadius: "6px", fontSize: "0.8rem" }}
                                             >
                                                 <option value="">Unassigned</option>
                                                 {lecturers.map(l => (
@@ -511,7 +586,11 @@ const CoursesPanel = ({ departments, lecturers }) => {
                                                 onClick={() => handleDeleteCourse(c._id)} 
                                                 className="btn-icon" 
                                                 title="Delete Course"
-                                                style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                                style={{ 
+                                                    color: "var(--error)", 
+                                                    background: "var(--error-light)", 
+                                                    borderColor: "var(--error-border)" 
+                                                }}
                                             >
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                     <polyline points="3 6 5 6 21 6"/>
@@ -544,12 +623,12 @@ const CoursesPanel = ({ departments, lecturers }) => {
                         <textarea className="form-input" rows="3" placeholder="Course goals..." value={description} onChange={e => setDescription(e.target.value)} required></textarea>
                     </div>
 
-                    <div style={{ display: "flex", gap: "1rem" }}>
-                        <div className="form-group" style={{ flex: 1 }}>
+                    <div className="form-row">
+                        <div className="form-group">
                             <label>Credits</label>
                             <input type="number" className="form-input" value={credits} onChange={e => setCredits(parseInt(e.target.value))} required />
                         </div>
-                        <div className="form-group" style={{ flex: 1 }}>
+                        <div className="form-group">
                             <label>Semester</label>
                             <input type="text" className="form-input" value={semester} onChange={e => setSemester(e.target.value)} required />
                         </div>
@@ -557,7 +636,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
 
                     <div className="form-group">
                         <label>Department</label>
-                        <select className="form-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} style={{ background: "var(--background-dark)" }} required>
+                        <select className="form-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} required>
                             <option value="">Select Department</option>
                             {departments.map(d => (
                                 <option key={d._id} value={d._id}>{d.code} - {d.name}</option>
@@ -567,7 +646,7 @@ const CoursesPanel = ({ departments, lecturers }) => {
 
                     <div className="form-group">
                         <label>Assign Initial Lecturer (Optional)</label>
-                        <select className="form-input" value={lecturerId} onChange={e => setLecturerId(e.target.value)} style={{ background: "var(--background-dark)" }}>
+                        <select className="form-input" value={lecturerId} onChange={e => setLecturerId(e.target.value)}>
                             <option value="">Unassigned</option>
                             {lecturers.map(l => (
                                 <option key={l._id} value={l._id}>{l.name}</option>
@@ -789,7 +868,11 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
                                                 onClick={() => handleDeleteDept(d._id)} 
                                                 className="btn-icon" 
                                                 title="Delete Department"
-                                                style={{ color: "var(--error)", background: "rgba(255,255,255,0.02)" }}
+                                                style={{ 
+                                                    color: "var(--error)", 
+                                                    background: "var(--error-light)", 
+                                                    borderColor: "var(--error-border)" 
+                                                }}
                                             >
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                     <polyline points="3 6 5 6 21 6"/>
@@ -836,7 +919,7 @@ const FacultiesPanel = ({ faculties, departments, onReload }) => {
                         </div>
                         <div className="form-group">
                             <label>Faculty Parent</label>
-                            <select className="form-input" value={facultyId} onChange={e => setFacultyId(e.target.value)} style={{ background: "var(--background-dark)" }} required>
+                            <select className="form-input" value={facultyId} onChange={e => setFacultyId(e.target.value)} required>
                                 <option value="">Select Faculty</option>
                                 {faculties.map(f => (
                                     <option key={f._id} value={f._id}>{f.name}</option>
@@ -901,14 +984,14 @@ const AuditLogsPanel = () => {
                     <div className="empty-state-text">No security audit logs have been recorded.</div>
                 </div>
             ) : (
-                <div className="timeline" style={{ display: "flex", flexDirection: "column", gap: "1.2rem", position: "relative", paddingLeft: "1.5rem", borderLeft: "2px solid rgba(255,255,255,0.06)", marginLeft: "0.5rem" }}>
+                <div className="timeline" style={{ display: "flex", flexDirection: "column", gap: "1.2rem", position: "relative", paddingLeft: "1.5rem", borderLeft: "2px solid var(--border-color)", marginLeft: "0.5rem" }}>
                     {logs.map(log => (
                         <div key={log._id} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                             {/* Timeline Dot */}
-                            <div style={{ position: "absolute", left: "-29px", top: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "var(--role-accent)", border: "2px solid var(--background-dark)" }}></div>
+                            <div style={{ position: "absolute", left: "-30px", top: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "var(--role-accent)", border: "2px solid var(--background-dark)" }}></div>
                             
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", color: "var(--text-main)", fontSize: "0.7rem", textTransform: "uppercase", fontWeight: "600", padding: "0.2rem 0.5rem" }}>
+                                <span className="badge" style={{ background: "var(--primary-glow)", border: "1px solid var(--border-color)", color: "var(--text-main)", fontSize: "0.7rem", textTransform: "uppercase", fontWeight: "600", padding: "0.2rem 0.5rem" }}>
                                     {log.action}
                                 </span>
                                 <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>

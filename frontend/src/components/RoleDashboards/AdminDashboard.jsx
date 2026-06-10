@@ -141,7 +141,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem", marginTop: "2rem" }}>
+            <div className="admin-grid-layout" style={{ marginTop: "2rem" }}>
                 {/* Recent System Activities (Audit logs) */}
                 <div className="glass-card-static animate-slide-up stagger-5" style={{ display: "flex", flexDirection: "column" }}>
                     <h3 style={{ marginBottom: "1.5rem" }}>Recent Audit Trails</h3>
@@ -158,14 +158,14 @@ const AdminDashboard = () => {
                             <div className="empty-state-text">System events will appear here once users perform actions.</div>
                         </div>
                     ) : (
-                        <div className="timeline" style={{ display: "flex", flexDirection: "column", gap: "1.2rem", position: "relative", paddingLeft: "1.5rem", borderLeft: "2px solid rgba(255,255,255,0.06)", marginLeft: "0.5rem", flex: 1 }}>
+                        <div className="timeline" style={{ display: "flex", flexDirection: "column", gap: "1.2rem", position: "relative", paddingLeft: "1.5rem", borderLeft: "2px solid var(--border-color)", marginLeft: "0.5rem", flex: 1 }}>
                             {auditLogs.map(log => (
                                 <div key={log._id} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                                     {/* Timeline Dot */}
-                                    <div style={{ position: "absolute", left: "-29px", top: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "var(--role-accent)", border: "2px solid var(--background-dark)" }}></div>
+                                    <div style={{ position: "absolute", left: "-30px", top: "4px", width: "10px", height: "10px", borderRadius: "50%", background: "var(--role-accent)", border: "2px solid var(--background-dark)" }}></div>
                                     
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span className="badge" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", color: "var(--text-main)", fontSize: "0.7rem", textTransform: "uppercase", fontWeight: "600", padding: "0.2rem 0.5rem" }}>
+                                        <span className="badge" style={{ background: "var(--primary-glow)", border: "1px solid var(--border-color)", color: "var(--text-main)", fontSize: "0.7rem", textTransform: "uppercase", fontWeight: "600", padding: "0.2rem 0.5rem" }}>
                                             {log.action}
                                         </span>
                                         <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>

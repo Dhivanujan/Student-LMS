@@ -1619,8 +1619,8 @@ textarea.form-input {
 }
 
 .premium-table th {
-    background: rgba(0, 0, 0, 0.25);
-    color: var(--text-dim);
+    background: var(--primary-glow);
+    color: var(--primary);
     text-align: left;
     padding: 0.85rem 1.1rem;
     font-family: var(--font-heading);
@@ -1645,7 +1645,7 @@ textarea.form-input {
 }
 
 .premium-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.025);
+    background: rgba(138, 21, 21, 0.02);
 }
 
 .premium-table tbody tr:hover td {
