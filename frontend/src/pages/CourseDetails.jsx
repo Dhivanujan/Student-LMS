@@ -460,6 +460,28 @@ const AssignmentsTab = ({ assignments, courseId, user, onUpdate }) => {
     const [gradingSubId, setGradingSubId] = useState(null);
     const [grade, setGrade] = useState("");
     const [feedback, setFeedback] = useState("");
+    const [aiEvaluating, setAiEvaluating] = useState(false);
+
+    const handleAIEvaluate = async () => {
+        const selectedSub = submissions.find(s => s._id === gradingSubId);
+        if (!selectedSub) return;
+        setAiEvaluating(true);
+        try {
+            const submissionText = selectedSub.comments || `No comments submitted. File name: ${selectedSub.fileUrl.split("/").pop()}`;
+            const response = await api.post("/ai/evaluate-submission", {
+                submissionText,
+                assignmentId: selectedAssignment._id
+            });
+            const { recommendedGrade, recommendedFeedback } = response.data.data;
+            setGrade(recommendedGrade);
+            setFeedback(recommendedFeedback);
+        } catch (err) {
+            console.error("AI Evaluation failed", err);
+            alert("Could not run AI Evaluation. Please try manual grading.");
+        } finally {
+            setAiEvaluating(false);
+        }
+    };
 
     const loadAssignmentDetails = async (assId) => {
         try {
@@ -730,7 +752,28 @@ const AssignmentsTab = ({ assignments, courseId, user, onUpdate }) => {
                             {/* Grading form */}
                             {gradingSubId && (
                                 <div className="glass-card-static animate-scale-in" style={{ marginTop: "2rem", maxWidth: "500px" }}>
-                                    <h4>Grade Student Work</h4>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                                        <h4 style={{ margin: 0 }}>Grade Student Work</h4>
+                                        <button
+                                            type="button"
+                                            onClick={handleAIEvaluate}
+                                            disabled={aiEvaluating}
+                                            className="btn btn-outline btn-sm animate-pulse"
+                                            style={{ color: "#818cf8", borderColor: "rgba(129, 140, 248, 0.4)", display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                                        >
+                                            {aiEvaluating ? (
+                                                <span>Evaluating...</span>
+                                            ) : (
+                                                <>
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "12px", height: "12px" }}>
+                                                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                                                        <circle cx="12" cy="12" r="4" />
+                                                    </svg>
+                                                    <span>AI Assessment</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                     <form onSubmit={handleGradeSubmission} style={{ marginTop: "1rem" }}>
                                         <div className="form-group">
                                             <label>Marks (out of {selectedAssignment.maxMarks})</label>
@@ -857,6 +900,52 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
     const [qOptions, setQOptions] = useState(["", "", "", ""]);
     const [qAnswer, setQAnswer] = useState("0");
     const [qPoints, setQPoints] = useState(5);
+
+    // AI Quiz Generator States & Handler
+    const [aiTopic, setAiTopic] = useState("");
+    const [aiGenerating, setAiGenerating] = useState(false);
+
+    const handleAIGenerateQuiz = async () => {
+        if (!aiTopic.trim()) return;
+        setAiGenerating(true);
+        try {
+            const response = await api.post("/ai/generate-quiz", {
+                topic: aiTopic,
+                questionCount: 5
+            });
+            const genQuestions = response.data.data.questions;
+            
+            const payloadQuestions = genQuestions.map(q => {
+                let correctAnswerValue = q.correctAnswer;
+                if (q.type === "mcq") {
+                    const idx = q.options.indexOf(q.correctAnswer);
+                    correctAnswerValue = idx !== -1 ? idx.toString() : "0";
+                } else if (q.type === "true_false") {
+                    correctAnswerValue = q.correctAnswer.toLowerCase();
+                }
+                return {
+                    text: q.questionText,
+                    type: q.type,
+                    points: q.type === "mcq" ? 5 : 2,
+                    options: q.type === "mcq" ? q.options : undefined,
+                    correctAnswer: correctAnswerValue
+                };
+            });
+
+            await api.post(`/quizzes/${selectedQuiz._id}/questions`, {
+                questions: payloadQuestions
+            });
+
+            alert(`Successfully generated and added ${payloadQuestions.length} questions to the quiz!`);
+            setAiTopic("");
+            loadQuizDetails(selectedQuiz._id);
+        } catch (err) {
+            console.error("AI Quiz generation failed", err);
+            alert("Failed to generate questions. Please try manual entry.");
+        } finally {
+            setAiGenerating(false);
+        }
+    };
 
     const loadQuizDetails = async (quizId) => {
         try {
@@ -1033,9 +1122,35 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                             </div>
 
                             {/* ADD QUESTION FORM BUILDER */}
-                            <div className="glass-card-static" style={{ background: "rgba(0,0,0,0.15)", height: "fit-content" }}>
-                                <h3>Add Question</h3>
-                                <form onSubmit={handleAddQuestion} style={{ marginTop: "1.25rem" }}>
+                            <div className="glass-card-static" style={{ background: "rgba(0,0,0,0.15)", height: "fit-content", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                                <div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                                        <h3 style={{ margin: 0 }}>AI Quiz Generator</h3>
+                                        <span className="badge badge-student" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem", fontWeight: "600" }}>Active</span>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="Topic (e.g. Mayamalavagowla ragas)" 
+                                            value={aiTopic}
+                                            onChange={e => setAiTopic(e.target.value)}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-outline" 
+                                            style={{ color: "#818cf8", borderColor: "rgba(129, 140, 248, 0.4)", width: "100%", justifyContent: "center" }}
+                                            onClick={handleAIGenerateQuiz}
+                                            disabled={aiGenerating || !aiTopic.trim()}
+                                        >
+                                            {aiGenerating ? "Generating..." : "⚡ Generate & Insert 5 Questions"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
+                                    <h3 style={{ margin: 0 }}>Add Question Manually</h3>
+                                    <form onSubmit={handleAddQuestion} style={{ marginTop: "1.25rem" }}>
                                     <div className="form-group">
                                         <label>Question Type</label>
                                         <select className="form-input" value={qType} onChange={e => { setQType(e.target.value); setQAnswer(e.target.value === "true_false" ? "true" : "0"); }} style={{ background: "var(--background-dark)" }}>
@@ -1097,7 +1212,8 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
                                     <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "1rem", justifyContent: "center" }}>
                                         Add to Quiz
                                     </button>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     ) : (

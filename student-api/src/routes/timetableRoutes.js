@@ -13,10 +13,10 @@ router.use(protect);
 
 router.route("/")
     .get(getTimetables)
-    .post(authorize("admin", "hod"), createTimetableSlot);
+    .post(authorize("admin", "lecturer"), createTimetableSlot);
 
 router.route("/:id")
-    .put(authorize("admin", "hod"), updateTimetableSlot)
-    .delete(authorize("admin", "hod"), deleteTimetableSlot);
+    .put(authorize("admin", "lecturer"), updateTimetableSlot)
+    .delete(authorize("admin", "lecturer"), deleteTimetableSlot);
 
 module.exports = router;

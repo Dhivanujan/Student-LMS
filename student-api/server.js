@@ -41,12 +41,10 @@ const forumRoutes = require("./src/routes/forumRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
 const examRoutes = require("./src/routes/examRoutes");
-const portfolioRoutes = require("./src/routes/portfolioRoutes");
-const libraryRoutes = require("./src/routes/libraryRoutes");
 const eventRoutes = require("./src/routes/eventRoutes");
 const timetableRoutes = require("./src/routes/timetableRoutes");
-const feedbackRoutes = require("./src/routes/feedbackRoutes");
 const quizRoutes = require("./src/routes/quizRoutes");
+const aiRoutes = require("./src/routes/aiRoutes");
 const errorHandler = require("./src/middleware/errorMiddleware");
 
 // Mount routes at specific paths
@@ -60,12 +58,10 @@ app.use("/api/forums", forumRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/exams", examRoutes);
-app.use("/api/portfolios", portfolioRoutes);
-app.use("/api/library", libraryRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/timetables", timetableRoutes);
-app.use("/api/feedbacks", feedbackRoutes);
 app.use("/api/quizzes", quizRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Static uploads serving
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));

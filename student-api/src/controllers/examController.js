@@ -94,11 +94,11 @@ exports.enterMarks = async (req, res) => {
             return res.status(404).json({ success: false, message: "Exam not found" });
         }
 
-        // Authorization check: HOD, Exam Officer, or the assigned lecturer of the course
+        // Authorization check: Admin or the assigned lecturer of the course
         const isLecturer = exam.courseId.lecturerId?.toString() === req.user.id;
-        const isAdminOrOfficerOrHod = ["admin", "exam_officer", "hod"].includes(req.user.role);
+        const isAdmin = ["admin"].includes(req.user.role);
 
-        if (!isLecturer && !isAdminOrOfficerOrHod) {
+        if (!isLecturer && !isAdmin) {
             return res.status(403).json({ success: false, message: "Not authorized to enter marks for this exam" });
         }
 

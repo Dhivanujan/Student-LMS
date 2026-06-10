@@ -15,16 +15,16 @@ router.use(protect);
 
 router.route("/venues")
     .get(getVenues)
-    .post(authorize("admin", "hod"), createVenue);
+    .post(authorize("admin"), createVenue);
 
 router.route("/")
     .get(getEvents)
-    .post(authorize("admin", "hod", "lecturer"), createEvent);
+    .post(authorize("admin", "lecturer"), createEvent);
 
 router.route("/:id/register")
     .post(registerParticipant);
 
 router.route("/:id")
-    .delete(authorize("admin", "hod", "lecturer"), deleteEvent);
+    .delete(authorize("admin", "lecturer"), deleteEvent);
 
 module.exports = router;

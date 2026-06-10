@@ -25,12 +25,9 @@ const Announcement = require("./src/models/Announcement");
 const ForumThread = require("./src/models/ForumThread");
 const ForumComment = require("./src/models/ForumComment");
 const Venue = require("./src/models/Venue");
-const Portfolio = require("./src/models/Portfolio");
-const PortfolioItem = require("./src/models/PortfolioItem");
 const Event = require("./src/models/Event");
-const LibraryBook = require("./src/models/LibraryBook");
 const Timetable = require("./src/models/Timetable");
-const Feedback = require("./src/models/Feedback");
+
 
 const seedDatabase = async () => {
     try {
@@ -109,24 +106,24 @@ const seedDatabase = async () => {
             registrationNumber: "ADMIN-001"
         });
 
-        // 3b. Examination Officer
+        // 3b. Examination Officer (Admin Role)
         const examOfficer = await User.create({
             name: "Mr. Shanmugavadivel",
             email: "exam.officer@unilms.edu",
             password: "Exam@12345",
-            role: "exam_officer",
+            role: "admin",
             firstLogin: false,
             isActive: true,
             department: "Examinations Department",
             registrationNumber: "EXAM-001"
         });
 
-        // 3c. Heads of Department (HODs)
+        // 3c. Heads of Department (HODs - Lecturer Role)
         const musicHodUser = await User.create({
             name: "Dr. K. Ravichandra",
             email: "music.hod@unilms.edu",
             password: "Hod@12345",
-            role: "hod",
+            role: "lecturer",
             firstLogin: false,
             isActive: true,
             department: "Department of Music",
@@ -145,7 +142,7 @@ const seedDatabase = async () => {
             name: "Prof. (Mrs.) Kamala Jayanthi",
             email: "dance.hod@unilms.edu",
             password: "Hod@12345",
-            role: "hod",
+            role: "lecturer",
             firstLogin: false,
             isActive: true,
             department: "Department of Dance",
@@ -618,53 +615,7 @@ const seedDatabase = async () => {
 
         console.log("✅ Seeded SVIAS Events.");
 
-        // ==========================================
-        // 10. SEED DIGITAL LIBRARY
-        // ==========================================
-        console.log("\n📚 Seeding Digital Library Catalog...");
 
-        await LibraryBook.create([
-            {
-                title: "Introduction to Raga Lakshanas",
-                author: "Dr. K. Ravichandra",
-                category: "Music",
-                type: "book",
-                isbn: "978-955-442-12-3",
-                publishedYear: 2021,
-                description: "A comprehensive guide analyzing Carnatic music ragas, scale structures, and performance notes.",
-                fileUrl: "https://example.com/svias/library/raga_lakshanas.pdf"
-            },
-            {
-                title: "Syllabus on Bharatanatyam Margam",
-                author: "Kamala Jayanthi",
-                category: "Dance",
-                type: "book",
-                isbn: "978-955-883-99-0",
-                publishedYear: 2018,
-                description: "The complete sequences of Alarippu, Jatiswaram, Shabdam, Varnam, and Tillana.",
-                fileUrl: "https://example.com/svias/library/bharatanatyam_margam.pdf"
-            },
-            {
-                title: "Traditional Dance Past Paper 2025",
-                author: "Department of Dance",
-                category: "Past Papers",
-                type: "past_paper",
-                publishedYear: 2025,
-                description: "Eastern University SVIAS final year exam questions for low country rhythm patterns.",
-                fileUrl: "https://example.com/svias/library/dnc_pastpaper_2025.pdf"
-            },
-            {
-                title: "Research on Traditional Folk Koothu in Trincomalee",
-                author: "Kandiah S.",
-                category: "Research Materials",
-                type: "research_paper",
-                publishedYear: 2023,
-                description: "Ethnographic study detailing chants, costume designs, and rhythm structures of folk theatre in Eastern Sri Lanka.",
-                fileUrl: "https://example.com/svias/library/koothu_trinco_research.pdf"
-            }
-        ]);
-
-        console.log("✅ Seeded Library Books Catalog.");
 
         // ==========================================
         // 11. SEED EXAMS & RESULTS
@@ -723,59 +674,13 @@ const seedDatabase = async () => {
 
         console.log("✅ Seeded Exams and Results.");
 
-        // ==========================================
-        // 12. SEED FEEDBACK
-        // ==========================================
-        console.log("\n💬 Seeding Feedback surveys...");
 
-        await Feedback.create([
-            {
-                type: "course",
-                fromUser: student1User._id,
-                courseId: mus101._id,
-                rating: 5,
-                comments: "Excellent introduction to the swaras. Very engaging theoretical lectures!"
-            },
-            {
-                type: "lecturer",
-                fromUser: student2User._id,
-                toUser: danceLecturerUser._id,
-                courseId: dnc101._id,
-                rating: 4,
-                comments: "Mrs. Rukmani gives very detailed feedback during dance classes. Appreciated!"
-            }
-        ]);
-
-        console.log("✅ Seeded Feedback surveys.");
-
-        // ==========================================
-        // 13. SEED PORTFOLIOS
-        // ==========================================
-        console.log("\n💼 Seeding Student Portfolios...");
-
-        const musPortfolio = await Portfolio.create({
-            studentId: student1User._id,
-            bio: "Carnatic vocal student at SVIAS. Experienced in singing classical ragas and playing the Veena.",
-            skills: ["Carnatic Singing", "Veena Playing", "Raga Analysis"],
-            category: "Music",
-            featuredImage: ""
-        });
-
-        const dncPortfolio = await Portfolio.create({
-            studentId: student2User._id,
-            bio: "Passionate Bharatanatyam and traditional Sri Lankan dancer. Interested in historical dance choreographies.",
-            skills: ["Bharatanatyam Practical", "Low Country Dance", "Expression Studies"],
-            category: "Dance",
-            featuredImage: ""
-        });
-
-        console.log("✅ Seeded Portfolios.");
 
         console.log("\n🎉 SVIAS AESTHETIC STUDIES SEEDING COMPLETED SUCCESSFULLY!");
         console.log("👉 Defaults:");
         console.log("   - Admin: admin@unilms.edu | Admin@12345");
-        console.log("   - Exam Officer: exam.officer@unilms.edu | Exam@12345");
-        console.log("   - HOD Music: music.hod@unilms.edu | Hod@12345");
+        console.log("   - Exam Officer (Admin): exam.officer@unilms.edu | Exam@12345");
+        console.log("   - HOD Music (Lecturer): music.hod@unilms.edu | Hod@12345");
         console.log("   - Lecturer Music: saraswathy.m@unilms.edu | Lecturer@123");
         console.log("   - Student Music: dhivy.m@student.unilms.edu | Student@123\n");
         

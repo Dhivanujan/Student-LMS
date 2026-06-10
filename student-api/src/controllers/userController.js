@@ -41,7 +41,7 @@ const syncUserProfile = async (user, spec) => {
                 await student.save();
             }
             await Lecturer.findOneAndDelete({ userId: user._id });
-        } else if (user.role === "lecturer" || user.role === "hod") {
+        } else if (user.role === "lecturer") {
             let lecturer = await Lecturer.findOne({ userId: user._id });
             if (!lecturer) {
                 await Lecturer.create({

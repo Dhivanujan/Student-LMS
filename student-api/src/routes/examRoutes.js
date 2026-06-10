@@ -16,17 +16,17 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 router.use(protect);
 
 router.route("/")
-    .post(authorize("admin", "hod", "exam_officer"), createExam)
+    .post(authorize("admin", "lecturer"), createExam)
     .get(getExams);
 
 router.route("/report-card")
     .get(getStudentReportCard);
 
 router.route("/:examId/marks")
-    .post(authorize("admin", "hod", "exam_officer", "lecturer"), enterMarks);
+    .post(authorize("admin", "lecturer"), enterMarks);
 
 router.route("/:examId/publish")
-    .post(authorize("admin", "hod", "exam_officer"), publishResults);
+    .post(authorize("admin", "lecturer"), publishResults);
 
 router.route("/:examId/results")
     .get(getExamResults);
