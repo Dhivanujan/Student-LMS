@@ -199,7 +199,7 @@ const LecturerDashboard = () => {
     return (
         <div className="animate-fade-in">
             <h1 className="page-title">Lecturer Portal Dashboard</h1>
-            <p className="page-subtitle">Manage course materials, assign coursework, track student attendances, and grade submissions.</p>
+            <p className="page-subtitle">Manage course materials, assign coursework, and grade submissions.</p>
 
             {/* Metrics Grid */}
             <div className="stats-grid animate-slide-up stagger-1">

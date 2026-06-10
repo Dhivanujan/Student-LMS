@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../services/api";
 
 const StudentDashboard = () => {
-    const [metrics, setMetrics] = useState({ enrolledCourses: 0, gpa: 0, attendance: 100, upcomingAssignments: [] });
+    const [metrics, setMetrics] = useState({ enrolledCourses: 0, gpa: 0, upcomingAssignments: [] });
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +33,7 @@ const StudentDashboard = () => {
                 <div className="skeleton skeleton-text" style={{ width: "500px", height: "1.2rem", marginBottom: "2rem" }}></div>
 
                 <div className="stats-grid">
-                    {[1, 2, 3].map(i => (
+                    {[1, 2].map(i => (
                         <div key={i} className="stat-card skeleton-card" style={{ height: "140px" }}></div>
                     ))}
                 </div>
@@ -48,7 +48,6 @@ const StudentDashboard = () => {
 
     // Calculations for Progress Rings
     const gpaPercent = Math.min(100, Math.max(0, (metrics.gpa / 4.0) * 100));
-    const attendancePercent = Math.min(100, Math.max(0, metrics.attendance || 0));
 
     // Calculate urgency for deadlines
     const getUrgency = (dueDateStr) => {
@@ -110,33 +109,6 @@ const StudentDashboard = () => {
                     <div className="stat-subtitle">Based on graded work</div>
                     <span className="stat-link" style={{ cursor: "default" }}>
                         <span>Academic standing</span>
-                    </span>
-                </div>
-
-                <div className="stat-card animate-slide-up stagger-3">
-                    <div className="stat-card-header">
-                        <h3>Overall Attendance</h3>
-                        <div className="progress-ring-container">
-                            <svg className="progress-ring" width="44" height="44">
-                                <circle className="progress-ring-bg" cx="22" cy="22" r="18" strokeWidth="3" />
-                                <circle 
-                                    className="progress-ring-fill" 
-                                    cx="22" 
-                                    cy="22" 
-                                    r="18" 
-                                    strokeWidth="3" 
-                                    stroke={attendancePercent >= 75 ? "#34d399" : attendancePercent >= 50 ? "#fbbf24" : "#f87171"}
-                                    strokeDasharray="113" 
-                                    strokeDashoffset={113 - (113 * attendancePercent) / 100}
-                                />
-                            </svg>
-                            <span style={{ position: "absolute", fontSize: "0.7rem", fontWeight: "700" }}>%</span>
-                        </div>
-                    </div>
-                    <div className="value">{metrics.attendance}%</div>
-                    <div className="stat-subtitle">Target presence: &gt; 75%</div>
-                    <span className="stat-link" style={{ cursor: "default" }}>
-                        <span>Course attendance rate</span>
                     </span>
                 </div>
             </div>

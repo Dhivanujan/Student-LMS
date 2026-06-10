@@ -21,7 +21,6 @@ const Submission = require("./src/models/Submission");
 const Quiz = require("./src/models/Quiz");
 const Question = require("./src/models/Question");
 const Result = require("./src/models/Result");
-const Attendance = require("./src/models/Attendance");
 const Announcement = require("./src/models/Announcement");
 const ForumThread = require("./src/models/ForumThread");
 const ForumComment = require("./src/models/ForumComment");

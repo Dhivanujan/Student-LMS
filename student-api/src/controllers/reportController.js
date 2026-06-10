@@ -5,7 +5,6 @@ const Assignment = require("../models/Assignment");
 const Submission = require("../models/Submission");
 const Quiz = require("../models/Quiz");
 const Result = require("../models/Result");
-const Attendance = require("../models/Attendance");
 
 // ============================================
 // ADMIN DASHBOARD METRICS
@@ -104,25 +103,6 @@ exports.getStudentMetrics = async (req, res) => {
             gpa = ((avgPercentage / 100) * 4.0).toFixed(2);
         }
 
-        // Attendance overall calculation
-        const attendanceSheets = await Attendance.find();
-        let presentCount = 0;
-        let totalClasses = 0;
-
-        attendanceSheets.forEach(sheet => {
-            const rec = sheet.records.find(r => r.studentId.toString() === studentId.toString());
-            if (rec) {
-                totalClasses++;
-                if (rec.status === "present" || rec.status === "late") {
-                    presentCount += rec.status === "present" ? 1 : 0.5;
-                }
-            }
-        });
-
-        const attendancePercentage = totalClasses > 0
-            ? Math.round((presentCount / totalClasses) * 100)
-            : 100;
-
         // Upcoming assignments
         const enrollments = await Enrollment.find({ studentId, status: "approved" });
         const courseIds = enrollments.map(e => e.courseId);
@@ -137,7 +117,6 @@ exports.getStudentMetrics = async (req, res) => {
             data: {
                 enrolledCourses: enrolledCount,
                 gpa,
-                attendance: attendancePercentage,
                 upcomingAssignments
             }
         });
@@ -163,16 +142,6 @@ exports.exportReport = async (req, res) => {
             csvContent = "Student ID,Student Name,Course Code,Assignment,Grade,Status\n";
             submissions.forEach(sub => {
                 csvContent += `"${sub.studentId?.studentId || "N/A"}","${sub.studentId?.name || "N/A"}","${sub.assignmentId?.courseId?.code || "N/A"}","${sub.assignmentId?.title || "N/A"}",${sub.grade !== null ? sub.grade : "Ungraded"},"${sub.status}"\n`;
-            });
-        } else if (type === "attendance") {
-            const attendances = await Attendance.find()
-                .populate("courseId", "name code");
-
-            csvContent = "Date,Course Code,Course Name,Present Count,Absent Count\n";
-            attendances.forEach(att => {
-                const present = att.records.filter(r => r.status === "present").length;
-                const absent = att.records.filter(r => r.status === "absent").length;
-                csvContent += `"${att.date.toLocaleDateString()}","${att.courseId?.code || "N/A"}","${att.courseId?.name || "N/A"}",${present},${absent}\n`;
             });
         } else {
             const users = await User.find().populate("departmentId", "name");

@@ -36,8 +36,6 @@ const userRoutes = require("./src/routes/userRoutes");
 const courseRoutes = require("./src/routes/courseRoutes");
 const enrollmentRoutes = require("./src/routes/enrollmentRoutes");
 const assignmentRoutes = require("./src/routes/assignmentRoutes");
-const quizRoutes = require("./src/routes/quizRoutes");
-const attendanceRoutes = require("./src/routes/attendanceRoutes");
 const announcementRoutes = require("./src/routes/announcementRoutes");
 const forumRoutes = require("./src/routes/forumRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
@@ -48,6 +46,7 @@ const libraryRoutes = require("./src/routes/libraryRoutes");
 const eventRoutes = require("./src/routes/eventRoutes");
 const timetableRoutes = require("./src/routes/timetableRoutes");
 const feedbackRoutes = require("./src/routes/feedbackRoutes");
+const quizRoutes = require("./src/routes/quizRoutes");
 const errorHandler = require("./src/middleware/errorMiddleware");
 
 // Mount routes at specific paths
@@ -56,8 +55,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/assignments", assignmentRoutes);
-app.use("/api/quizzes", quizRoutes);
-app.use("/api/attendance", attendanceRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/forums", forumRoutes);
 app.use("/api/notifications", notificationRoutes);
@@ -68,6 +65,7 @@ app.use("/api/library", libraryRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/timetables", timetableRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
+app.use("/api/quizzes", quizRoutes);
 
 // Static uploads serving
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));

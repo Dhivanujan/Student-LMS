@@ -19,8 +19,6 @@ const CourseDetails = () => {
     const [materials, setMaterials] = useState([]);
     const [assignments, setAssignments] = useState([]);
     const [quizzes, setQuizzes] = useState([]);
-    const [attendanceStats, setAttendanceStats] = useState([]);
-    const [studentAttendance, setStudentAttendance] = useState({ percentage: 100, data: [] });
     const [forumThreads, setForumThreads] = useState([]);
     const [announcements, setAnnouncements] = useState([]);
 
@@ -47,14 +45,6 @@ const CourseDetails = () => {
             } else if (activeTab === "quizzes") {
                 const res = await api.get(`/quizzes/course/${id}`);
                 setQuizzes(res.data.data);
-            } else if (activeTab === "attendance") {
-                if (user.role === "student") {
-                    const res = await api.get(`/attendance/course/${id}`);
-                    setStudentAttendance(res.data);
-                } else {
-                    const res = await api.get(`/attendance/course/${id}/stats`);
-                    setAttendanceStats(res.data.data);
-                }
             } else if (activeTab === "forum") {
                 const res = await api.get(`/forums/course/${id}`);
                 setForumThreads(res.data.data);
@@ -183,15 +173,6 @@ const CourseDetails = () => {
                     </svg>
                     <span>Quizzes</span>
                 </button>
-                <button className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`} onClick={() => setActiveTab("attendance")}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <span>Attendance</span>
-                </button>
                 <button className={`tab-btn ${activeTab === "forum" ? "active" : ""}`} onClick={() => setActiveTab("forum")}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "16px", height: "16px" }}>
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -233,16 +214,6 @@ const CourseDetails = () => {
                         quizzes={quizzes} 
                         courseId={id} 
                         user={user} 
-                        onUpdate={fetchTabData} 
-                    />
-                )}
-                {activeTab === "attendance" && (
-                    <AttendanceTab 
-                        attendanceStats={attendanceStats} 
-                        studentAttendance={studentAttendance}
-                        courseId={id} 
-                        user={user} 
-                        enrolledStudents={enrolledStudents}
                         onUpdate={fetchTabData} 
                     />
                 )}
@@ -1245,259 +1216,6 @@ const QuizzesTab = ({ quizzes, courseId, user, onUpdate }) => {
     );
 };
 
-// ==========================================================================
-// 4. ATTENDANCE TAB COMPONENT
-// ==========================================================================
-const AttendanceTab = ({ attendanceStats, studentAttendance, courseId, user, enrolledStudents, onUpdate }) => {
-    const [markingDate, setMarkingDate] = useState(new Date().toISOString().substring(0, 10));
-    const [marks, setMarks] = useState({}); // { studentId: 'present'/'absent'/'late' }
-    const [submitting, setSubmitting] = useState(false);
-
-    useEffect(() => {
-        // Initialize all student marks as present
-        if (enrolledStudents) {
-            const initial = {};
-            enrolledStudents.forEach(stu => {
-                initial[stu._id] = "present";
-            });
-            const timer = setTimeout(() => {
-                setMarks(initial);
-            }, 0);
-            return () => clearTimeout(timer);
-        }
-    }, [enrolledStudents]);
-
-    const handleStatusChange = (stuId, status) => {
-        setMarks(prev => ({
-            ...prev,
-            [stuId]: status
-        }));
-    };
-
-    const handleMarkAttendance = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-
-        const records = Object.keys(marks).map(stuId => ({
-            studentId: stuId,
-            status: marks[stuId]
-        }));
-
-        try {
-            await api.post("/attendance", {
-                courseId,
-                date: markingDate,
-                records
-            });
-            alert("Attendance register saved!");
-            onUpdate();
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to mark attendance");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    return (
-        <div>
-            {user.role === "student" ? (
-                // STUDENT VIEW
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
-                    <div className="glass-card-static text-center" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "2rem" }}>
-                        <h3>Overall Attendance</h3>
-                        <div className="value" style={{ fontSize: "3.5rem", margin: "1.5rem 0", color: studentAttendance.percentage >= 75 ? "var(--success)" : "var(--error)", fontWeight: "800" }}>
-                            {studentAttendance.percentage}%
-                        </div>
-                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: "1.4" }}>
-                            {studentAttendance.percentage >= 75 ? "You meet the minimum 75% attendance criteria! 👍" : "Warning: Attendance falls below 75% required minimum! 🚨"}
-                        </p>
-                    </div>
-
-                    <div className="glass-card-static">
-                        <h3>Attendance Log History</h3>
-                        {(!studentAttendance.data || studentAttendance.data.length === 0) ? (
-                            <div className="empty-state" style={{ padding: "3rem 1rem" }}>
-                                <div className="empty-state-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                        <line x1="16" y1="2" x2="16" y2="6"/>
-                                        <line x1="8" y1="2" x2="8" y2="6"/>
-                                    </svg>
-                                </div>
-                                <div className="empty-state-title">No check-ins recorded</div>
-                                <div className="empty-state-text">No attendance records have been registered for your account.</div>
-                            </div>
-                        ) : (
-                            <div className="table-responsive" style={{ marginTop: "1rem" }}>
-                                <table className="premium-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Class Session Date</th>
-                                            <th>Check-In Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {studentAttendance.data.map((log, idx) => (
-                                            <tr key={idx}>
-                                                <td><strong>{new Date(log.date).toLocaleDateString()}</strong></td>
-                                                <td>
-                                                    <span className={`badge badge-${log.status === "present" ? "success" : log.status === "absent" ? "danger" : "warning"}`} style={{ fontSize: "0.75rem", fontWeight: "700" }}>
-                                                        {log.status.toUpperCase()}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            ) : (
-                // LECTURER VIEW: ROSTER AND MARKING GRID
-                <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "2rem" }}>
-                    
-                    {/* Mark Daily Attendance */}
-                    <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
-                        <h3>Mark Daily Attendance</h3>
-                        <form onSubmit={handleMarkAttendance} style={{ marginTop: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
-                            <div className="form-group" style={{ maxWidth: "250px" }}>
-                                <label>Lecture Date</label>
-                                <input type="date" className="form-input" value={markingDate} onChange={e => setMarkingDate(e.target.value)} required />
-                            </div>
-
-                            {enrolledStudents.length === 0 ? (
-                                <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
-                                    <div className="empty-state-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="9" cy="7" r="4"/>
-                                        </svg>
-                                    </div>
-                                    <div className="empty-state-title">No students enrolled</div>
-                                    <div className="empty-state-text">No student rosters are assigned to this course.</div>
-                                </div>
-                            ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", margin: "1.5rem 0", flex: 1 }}>
-                                    {enrolledStudents.map(student => (
-                                        <div key={student._id} className="glass-card-inner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.8rem 1rem", borderRadius: "12px", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "0.5rem" }}>
-                                            <div>
-                                                <span style={{ fontWeight: "600", color: "var(--text-main)" }}>{student.name}</span>
-                                                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginLeft: "0.5rem" }}>({student.studentId})</span>
-                                            </div>
-                                            <div style={{ display: "flex", gap: "0.4rem" }}>
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleStatusChange(student._id, "present")} 
-                                                    className="btn btn-sm"
-                                                    style={{ 
-                                                        padding: "0.3rem 0.6rem", 
-                                                        fontSize: "0.75rem", 
-                                                        background: marks[student._id] === "present" ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.02)",
-                                                        color: marks[student._id] === "present" ? "var(--success)" : "var(--text-muted)",
-                                                        border: marks[student._id] === "present" ? "1px solid var(--success)" : "1px solid var(--border-color)",
-                                                        fontWeight: "600"
-                                                    }}
-                                                >
-                                                    Present
-                                                </button>
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleStatusChange(student._id, "absent")} 
-                                                    className="btn btn-sm"
-                                                    style={{ 
-                                                        padding: "0.3rem 0.6rem", 
-                                                        fontSize: "0.75rem", 
-                                                        background: marks[student._id] === "absent" ? "rgba(239, 68, 68, 0.2)" : "rgba(255,255,255,0.02)",
-                                                        color: marks[student._id] === "absent" ? "var(--error)" : "var(--text-muted)",
-                                                        border: marks[student._id] === "absent" ? "1px solid var(--error)" : "1px solid var(--border-color)",
-                                                        fontWeight: "600"
-                                                    }}
-                                                >
-                                                    Absent
-                                                </button>
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleStatusChange(student._id, "late")} 
-                                                    className="btn btn-sm"
-                                                    style={{ 
-                                                        padding: "0.3rem 0.6rem", 
-                                                        fontSize: "0.75rem", 
-                                                        background: marks[student._id] === "late" ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.02)",
-                                                        color: marks[student._id] === "late" ? "#fbbf24" : "var(--text-muted)",
-                                                        border: marks[student._id] === "late" ? "1px solid #fbbf24" : "1px solid var(--border-color)",
-                                                        fontWeight: "600"
-                                                    }}
-                                                >
-                                                    Late
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <button type="submit" className="btn btn-primary" disabled={submitting || enrolledStudents.length === 0} style={{ width: "100%", justifyContent: "center" }}>
-                                {submitting ? (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                        <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px" }}></div>
-                                        <span>Saving register...</span>
-                                    </div>
-                                ) : "Submit Attendance Register"}
-                            </button>
-                        </form>
-                    </div>
-
-                    {/* Attendance stats summary */}
-                    <div className="glass-card-static" style={{ display: "flex", flexDirection: "column" }}>
-                        <h3>Attendance Stats Roster</h3>
-                        {attendanceStats.length === 0 ? (
-                            <div className="empty-state" style={{ padding: "3rem 1rem", flex: 1 }}>
-                                <div className="empty-state-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                </div>
-                                <div className="empty-state-title">No data recorded</div>
-                                <div className="empty-state-text">No attendance records submitted for stats calculations yet.</div>
-                            </div>
-                        ) : (
-                            <div className="table-responsive" style={{ flex: 1, marginTop: "1rem" }}>
-                                <table className="premium-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Student Name</th>
-                                            <th>Present</th>
-                                            <th>Late</th>
-                                            <th>Absent</th>
-                                            <th>Rate</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {attendanceStats.map(stat => (
-                                            <tr key={stat.id}>
-                                                <td>{stat.name}</td>
-                                                <td>{stat.present}</td>
-                                                <td>{stat.late}</td>
-                                                <td>{stat.absent}</td>
-                                                <td>
-                                                    <strong style={{ color: stat.percentage >= 75 ? "var(--success)" : "var(--error)" }}>
-                                                        {stat.percentage}%
-                                                    </strong>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
 
 // ==========================================================================
 // 5. DISCUSSION FORUM TAB COMPONENT
