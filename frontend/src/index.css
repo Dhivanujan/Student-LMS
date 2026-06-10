@@ -1197,7 +1197,7 @@ textarea.form-input {
 }
 
 .sidebar-link:hover .sidebar-icon {
-    color: var(--role-accent);
+    color: var(--accent);
 }
 
 .sidebar-link.active {
@@ -1214,12 +1214,12 @@ textarea.form-input {
     bottom: 15%;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: var(--role-accent);
-    box-shadow: 0 0 8px var(--role-accent);
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
 }
 
 .sidebar-link.active .sidebar-icon {
-    color: var(--role-accent);
+    color: var(--accent);
 }
 
 /* Sidebar user card at bottom */
